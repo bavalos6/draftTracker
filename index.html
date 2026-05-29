@@ -3,63 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In-Person NFL Fantasy Draft Board</title>
-    <!-- Tailwind Play CDN works perfectly fine on GitHub Pages -->
+    <title>Apex Athletics — NFL Fantasy Draft Tracker</title>
+    
+    <!-- Tailwind Engine via Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6 selection:bg-amber-500 selection:text-slate-900">
+    
+    <!-- Google Fonts Injections: Anton, Hanken Grotesk, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    <div class="max-w-7xl mx-auto">
-        <!-- Header Actions -->
-        <header class="flex flex-wrap justify-between items-center gap-4 mb-8 border-b border-slate-700 pb-4">
+    <!-- Design Token Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stadium: '#0F172A',         // Base Level 0 Background[cite: 2]
+                        surface: '#1E293B',         // Container Card Level 1[cite: 2]
+                        surfaceHigh: '#334155',     // Borders and Active States[cite: 2]
+                        actionOrange: '#FB923C',    // Brand Secondary Highlights / CTAs[cite: 2]
+                        skyTechnical: '#38BDF8',    // Badges and Active Tags[cite: 2]
+                        crispWhite: '#F8FAFC',      // Readable Text Elements[cite: 2]
+                        surfaceDim: '#101415'       // Lower container tones[cite: 2]
+                    },
+                    fontFamily: {
+                        headline: ['Anton', 'sans-serif'],           // Athletic display headers[cite: 2]
+                        body: ['Hanken Grotesk', 'sans-serif'],      // Scaled text components[cite: 2]
+                        monoStats: ['JetBrains Mono', 'monospace']   // Tabular alphanumeric alignments[cite: 2]
+                    },
+                    borderRadius: {
+                        'sm': '0.125rem', // 2px[cite: 2]
+                        'DEFAULT': '0.25rem', // 4px[cite: 2]
+                        'md': '0.375rem', // 6px[cite: 2]
+                        'lg': '0.5rem',  // 8px[cite: 2]
+                        'xl': '0.75rem'  // 12px[cite: 2]
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Strict Design System Typography Overrides */
+        h1, h2, h3 { font-family: 'Anton', sans-serif; text-transform: uppercase; letter-spacing: 0.02em; }
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .stats-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Smooth native scrollbar inside dark interfaces */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0F172A; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FB923C; }
+    </style>
+</head>
+<body class="bg-stadium text-[#e0e3e5] min-h-screen p-6 font-body selection:bg-actionOrange selection:text-stadium antialiased">
+
+    <div class="max-w-[1440px] mx-auto">
+        
+        <!-- Command Control Header Block -->
+        <header class="flex flex-wrap justify-between items-center gap-6 mb-8 border-b border-surfaceHigh pb-5">
             <div>
-                <h1 class="text-3xl font-extrabold text-amber-400">🏈 Offline Draft Board</h1>
-                <p class="text-slate-400 text-sm">Drag players onto team rosters to draft them.</p>
+                <h1 class="text-4xl md:text-5xl font-normal text-crispWhite tracking-wider">🏈 APEX ATHLETICS</h1>
+                <p class="text-skyTechnical uppercase text-xs tracking-widest font-extrabold mt-1">DRAFT BOARD INFRASTRUCTURE // LIVE OPERATIONS</p>
             </div>
-            <div class="flex items-center gap-4">
-                <button id="undoBtn" disabled class="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg font-medium transition">
+            
+            <div class="flex flex-wrap items-center gap-4">
+                <button id="undoBtn" disabled class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-crispWhite disabled:opacity-30 disabled:cursor-not-allowed rounded font-semibold text-sm uppercase tracking-wider transition duration-150">
                     Undo Last Pick
                 </button>
+                
                 <form id="userForm" class="flex gap-2">
-                    <input id="userNameInput" type="text" placeholder="Add Manager Name" required class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-amber-400 text-white" />
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-lg text-sm transition">
+                    <input id="userNameInput" type="text" placeholder="ENTER MANAGER NAME" required class="bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm tracking-wide focus:outline-none focus:border-actionOrange text-crispWhite uppercase placeholder-slate-500 font-semibold transition" />
+                    <button type="submit" class="bg-actionOrange hover:bg-amber-400 text-stadium font-extrabold px-5 py-2.5 rounded text-sm uppercase tracking-wider transition whitespace-nowrap">
                         + Add Team
                     </button>
                 </form>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column: Player Pool -->
-            <div class="lg:col-span-1 bg-slate-800/50 p-4 rounded-xl border border-slate-700 h-[calc(100vh-180px)] flex flex-col">
-                <h2 class="text-xl font-bold mb-4 flex justify-between">
-                    <span>Available Players</span>
-                    <span id="playerCount" class="text-amber-400 font-mono">(0)</span>
+        <!-- Main Layout Matrix -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Fixed Anchor: Searchable Player Pool Panel (3 Columns) -->
+            <div class="lg:col-span-4 xl:col-span-3 bg-surface p-5 rounded-lg border border-surfaceHigh h-[calc(100vh-190px)] flex flex-col">
+                <h2 class="text-xl text-crispWhite mb-4 flex justify-between items-baseline">
+                    <span>Player Pool</span>
+                    <span id="playerCount" class="text-actionOrange stats-font text-lg font-bold">(0)</span>
                 </h2>
                 
-                <!-- Search & Filter Controls -->
-                <div class="space-y-2 mb-4">
-                    <input id="searchInput" type="text" placeholder="Search by name or team..." class="w-full bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-amber-400 text-white" />
+                <!-- Inputs and Quick Filter Matrices -->
+                <div class="space-y-3 mb-4">
+                    <input id="searchInput" type="text" placeholder="Filter by player or team keyword..." class="w-full bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm focus:outline-none focus:border-actionOrange text-crispWhite transition placeholder-slate-500 font-medium" />
+                    
                     <div class="flex flex-wrap gap-1" id="filterContainer">
-                        <button data-pos="ALL" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-amber-500 text-slate-900">ALL</button>
-                        <button data-pos="QB" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-slate-700 hover:bg-slate-600">QB</button>
-                        <button data-pos="RB" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-slate-700 hover:bg-slate-600">RB</button>
-                        <button data-pos="WR" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-slate-700 hover:bg-slate-600">WR</button>
-                        <button data-pos="TE" class="filter-btn px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider bg-slate-700 hover:bg-slate-600">TE</button>
+                        <button data-pos="ALL" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-actionOrange text-stadium transition">ALL</button>
+                        <button data-pos="QB" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">QB</button>
+                        <button data-pos="RB" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">RB</button>
+                        <button data-pos="WR" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">WR</button>
+                        <button data-pos="TE" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">TE</button>
                     </div>
                 </div>
 
-                <!-- Draggable List Wrapper -->
+                <!-- Live Drag Asset Engine Container -->
                 <div id="playerPoolList" class="overflow-y-auto flex-1 pr-1 space-y-2"></div>
             </div>
 
-            <!-- Right Columns: Team Rosters (Drop Zones) -->
-            <div id="rosterGrid" class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-start overflow-y-auto h-[calc(100vh-180px)] pr-1"></div>
+            <!-- Right Center: Fluid Matrix of Team Target Fields (8/9 Columns) -->
+            <div id="rosterGrid" class="lg:col-span-8 xl:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-start overflow-y-auto h-[calc(100vh-190px)] pr-1"></div>
         </div>
     </div>
 
+    <!-- Live Execution Logic Matrix -->
     <script>
-        // Data States
+        // High-Tier Mock Rankings Initial Population Map
         let players = [
             { id: 1, name: "Christian McCaffrey", pos: "RB", team: "SF" },
             { id: 2, name: "CeeDee Lamb", pos: "WR", team: "DAL" },
@@ -76,15 +133,15 @@
         ];
 
         let users = [
-            { id: 1, name: "Manager 1", roster: [] },
-            { id: 2, name: "Manager 2", roster: [] }
+            { id: 1, name: "WAR ROOM ALPHA", roster: [] },
+            { id: 2, name: "WAR ROOM BRAVO", roster: [] }
         ];
 
         let history = [];
         let currentFilter = "ALL";
         let currentSearch = "";
 
-        // DOM Elements
+        // Component DOM Interventions
         const playerPoolList = document.getElementById('playerPoolList');
         const rosterGrid = document.getElementById('rosterGrid');
         const playerCount = document.getElementById('playerCount');
@@ -93,7 +150,6 @@
         const userNameInput = document.getElementById('userNameInput');
         const undoBtn = document.getElementById('undoBtn');
 
-        // Save state snapshot for Undos
         function saveHistory() {
             history.push({
                 players: JSON.parse(JSON.stringify(players)),
@@ -102,7 +158,6 @@
             undoBtn.disabled = false;
         }
 
-        // Render functions
         function renderAll() {
             renderPlayers();
             renderRosters();
@@ -120,22 +175,24 @@
             playerCount.textContent = `(${filtered.length})`;
 
             if (filtered.length === 0) {
-                playerPoolList.innerHTML = `<p class="text-center text-slate-500 text-sm mt-8">No available players found.</p>`;
+                playerPoolList.innerHTML = `<p class="text-center text-slate-500 text-sm mt-8 font-semibold uppercase tracking-wider">No active assets match</p>`;
                 return;
             }
 
             filtered.forEach(player => {
                 const card = document.createElement('div');
-                card.className = "bg-slate-800 p-3 rounded-lg border border-slate-700 cursor-grab active:cursor-grabbing hover:border-amber-500/50 transition flex justify-between items-center group";
+                // Adhering to technical sharp border execution & low-contrast outline metrics
+                card.className = "bg-surface p-3 rounded border border-surfaceHigh/60 cursor-grab active:cursor-grabbing hover:border-actionOrange transition-all duration-150 flex justify-between items-center group shadow-md";
                 card.draggable = true;
                 card.dataset.id = player.id;
                 
                 card.innerHTML = `
                     <div>
-                        <span class="font-bold block group-hover:text-amber-400 transition">${player.name}</span>
-                        <span class="text-xs text-slate-400 font-mono uppercase">${player.team}</span>
+                        <span class="font-semibold block text-crispWhite group-hover:text-actionOrange transition duration-150">${player.name}</span>
+                        <span class="text-xs text-slate-400 stats-font uppercase tracking-wider">${player.team}</span>
                     </div>
-                    <span class="text-xs font-bold px-2 py-1 rounded bg-slate-700 text-slate-300">${player.pos}</span>
+                    <!-- Technical Stamp Position Tag: Zero Border Corners -->
+                    <span class="text-xs font-extrabold px-2.5 py-1 rounded-none bg-skyTechnical text-stadium stats-font">${player.pos}</span>
                 `;
 
                 card.addEventListener('dragstart', (e) => {
@@ -151,28 +208,28 @@
             
             users.forEach(user => {
                 const zone = document.createElement('div');
-                zone.className = "bg-slate-800/30 border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-xl p-4 transition min-h-[220px] flex flex-col";
+                // Tonal Layers combined with clean dashed outlines
+                zone.className = "bg-surface/40 border-2 border-dashed border-surfaceHigh/80 hover:border-actionOrange/50 rounded-lg p-4 transition-all duration-200 min-h-[240px] flex flex-col";
                 
                 let rosterItemsHTML = user.roster.map((player, idx) => `
-                    <div class="bg-slate-800 px-3 py-1.5 rounded border border-slate-700 flex justify-between items-center text-sm">
-                        <span><span class="text-slate-500 font-mono mr-2">${idx + 1}.</span>${player.name}</span>
-                        <span class="text-xs font-mono text-slate-400 uppercase">${player.pos} - ${player.team}</span>
+                    <div class="bg-surface px-4 py-2 rounded border border-surfaceHigh/50 flex justify-between items-center text-sm transition hover:border-slate-500">
+                        <span class="text-crispWhite font-medium"><span class="text-slate-500 stats-font mr-2">${String(idx + 1).padStart(2, '0')}.</span>${player.name}</span>
+                        <span class="text-xs stats-font text-skyTechnical font-bold uppercase tracking-wider">${player.pos} · ${player.team}</span>
                     </div>
                 `).join('');
 
                 if (user.roster.length === 0) {
-                    rosterItemsHTML = `<div class="h-full flex items-center justify-center text-slate-600 text-xs py-8 pointer-events-none">Drop player here to draft</div>`;
+                    rosterItemsHTML = `<div class="h-full flex-1 flex items-center justify-center text-slate-600 font-extrabold text-xs uppercase tracking-widest py-12 select-none pointer-events-none">Empty Target field // Drop to Draft</div>`;
                 }
 
                 zone.innerHTML = `
-                    <h3 class="font-bold border-b border-slate-700 pb-2 mb-2 flex justify-between text-slate-200">
+                    <h3 class="text-lg text-crispWhite border-b border-surfaceHigh/80 pb-2 mb-3 flex justify-between items-center tracking-wide">
                         <span>${user.name}</span>
-                        <span class="text-xs text-slate-400 font-normal">${user.roster.length} players</span>
+                        <span class="text-xs font-normal text-actionOrange stats-font bg-stadium px-2 py-0.5 rounded border border-surfaceHigh/50">${user.roster.length} ASSETS</span>
                     </h3>
-                    <div class="space-y-1.5 flex-1 layout-zone">${rosterItemsHTML}</div>
+                    <div class="space-y-2 flex-1 layout-zone">${rosterItemsHTML}</div>
                 `;
 
-                // Drag over behaviors
                 zone.addEventListener('dragover', (e) => e.preventDefault());
                 
                 zone.addEventListener('drop', (e) => {
@@ -192,7 +249,7 @@
             });
         }
 
-        // Setup Event Listeners
+        // Functional Listeners & Event Mapping Blocks
         searchInput.addEventListener('input', (e) => {
             currentSearch = e.target.value.toLowerCase();
             renderPlayers();
@@ -201,11 +258,11 @@
         document.getElementById('filterContainer').addEventListener('click', (e) => {
             if (e.target.classList.contains('filter-btn')) {
                 document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('bg-amber-500', 'text-slate-900');
-                    btn.classList.add('bg-slate-700', 'text-slate-300', 'hover:bg-slate-600');
+                    btn.classList.remove('bg-actionOrange', 'text-stadium');
+                    btn.classList.add('bg-surfaceHigh', 'text-crispWhite', 'hover:bg-slate-600');
                 });
-                e.target.classList.remove('bg-slate-700', 'text-slate-300', 'hover:bg-slate-600');
-                e.target.className += ' bg-amber-500 text-slate-900';
+                e.target.classList.remove('bg-surfaceHigh', 'text-crispWhite', 'hover:bg-slate-600');
+                e.target.className += ' bg-actionOrange text-stadium';
                 
                 currentFilter = e.target.dataset.pos;
                 renderPlayers();
@@ -214,7 +271,7 @@
 
         userForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = userNameInput.value.trim();
+            const name = userNameInput.value.trim().toUpperCase();
             if (name) {
                 users.push({ id: Date.now(), name: name, roster: [] });
                 userNameInput.value = '';
@@ -232,7 +289,7 @@
             }
         });
 
-        // Initialize App
+        // Initialize Native Core Configuration
         renderAll();
     </script>
 </body>
