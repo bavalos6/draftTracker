@@ -4,119 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apex Athletics — NFL Fantasy Draft Tracker</title>
-    
-    <!-- Tailwind Engine via Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts Injections: Anton, Hanken Grotesk, JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-    <!-- Design Token Tailwind Configuration -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        stadium: '#0F172A',         // Base Level 0 Background[cite: 2]
-                        surface: '#1E293B',         // Container Card Level 1[cite: 2]
-                        surfaceHigh: '#334155',     // Borders and Active States[cite: 2]
-                        actionOrange: '#FB923C',    // Brand Secondary Highlights / CTAs[cite: 2]
-                        skyTechnical: '#38BDF8',    // Badges and Active Tags[cite: 2]
-                        crispWhite: '#F8FAFC',      // Readable Text Elements[cite: 2]
-                        surfaceDim: '#101415'       // Lower container tones[cite: 2]
+                        stadium: '#0F172A',
+                        surface: '#1E293B',
+                        surfaceHigh: '#334155',
+                        actionOrange: '#FB923C',
+                        skyTechnical: '#38BDF8',
+                        crispWhite: '#F8FAFC',
+                        surfaceDim: '#101415'
                     },
                     fontFamily: {
-                        headline: ['Anton', 'sans-serif'],           // Athletic display headers[cite: 2]
-                        body: ['Hanken Grotesk', 'sans-serif'],      // Scaled text components[cite: 2]
-                        monoStats: ['JetBrains Mono', 'monospace']   // Tabular alphanumeric alignments[cite: 2]
-                    },
-                    borderRadius: {
-                        'sm': '0.125rem', // 2px[cite: 2]
-                        'DEFAULT': '0.25rem', // 4px[cite: 2]
-                        'md': '0.375rem', // 6px[cite: 2]
-                        'lg': '0.5rem',  // 8px[cite: 2]
-                        'xl': '0.75rem'  // 12px[cite: 2]
+                        headline: ['Anton', 'sans-serif'],
+                        body: ['Hanken Grotesk', 'sans-serif'],
+                        monoStats: ['JetBrains Mono', 'monospace']
                     }
                 }
             }
         }
     </script>
-    
     <style>
-        /* Strict Design System Typography Overrides */
         h1, h2, h3 { font-family: 'Anton', sans-serif; text-transform: uppercase; letter-spacing: 0.02em; }
         body { font-family: 'Hanken Grotesk', sans-serif; }
         .stats-font { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Smooth native scrollbar inside dark interfaces */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0F172A; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #FB923C; }
     </style>
 </head>
-<body class="bg-stadium text-[#e0e3e5] min-h-screen p-6 font-body selection:bg-actionOrange selection:text-stadium antialiased">
+<body class="bg-stadium text-[#e0e3e5] min-h-screen p-6 antialiased">
 
     <div class="max-w-[1440px] mx-auto">
-        
-        <!-- Command Control Header Block -->
         <header class="flex flex-wrap justify-between items-center gap-6 mb-8 border-b border-surfaceHigh pb-5">
             <div>
                 <h1 class="text-4xl md:text-5xl font-normal text-crispWhite tracking-wider">🏈 APEX ATHLETICS</h1>
-                <p class="text-skyTechnical uppercase text-xs tracking-widest font-extrabold mt-1">DRAFT BOARD INFRASTRUCTURE // LIVE OPERATIONS</p>
+                <p class="text-skyTechnical uppercase text-xs tracking-widest font-extrabold mt-1">DRAFT OPERATIONS // PERSONNEL MGMT</p>
             </div>
             
             <div class="flex flex-wrap items-center gap-4">
-                <button id="undoBtn" disabled class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-crispWhite disabled:opacity-30 disabled:cursor-not-allowed rounded font-semibold text-sm uppercase tracking-wider transition duration-150">
-                    Undo Last Pick
+                <button id="undoBtn" disabled class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-crispWhite disabled:opacity-30 rounded font-semibold text-sm uppercase tracking-wider transition">
+                    Undo
                 </button>
-                
                 <form id="userForm" class="flex gap-2">
-                    <input id="userNameInput" type="text" placeholder="ENTER MANAGER NAME" required class="bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm tracking-wide focus:outline-none focus:border-actionOrange text-crispWhite uppercase placeholder-slate-500 font-semibold transition" />
-                    <button type="submit" class="bg-actionOrange hover:bg-amber-400 text-stadium font-extrabold px-5 py-2.5 rounded text-sm uppercase tracking-wider transition whitespace-nowrap">
-                        + Add Team
+                    <input id="userNameInput" type="text" placeholder="NEW MANAGER NAME" required class="bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm focus:outline-none focus:border-actionOrange text-crispWhite uppercase font-semibold" />
+                    <button type="submit" class="bg-actionOrange hover:bg-amber-400 text-stadium font-extrabold px-5 py-2.5 rounded text-sm uppercase tracking-wider transition">
+                        Add Team
                     </button>
                 </form>
             </div>
         </header>
 
-        <!-- Main Layout Matrix -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Left Fixed Anchor: Searchable Player Pool Panel (3 Columns) -->
             <div class="lg:col-span-4 xl:col-span-3 bg-surface p-5 rounded-lg border border-surfaceHigh h-[calc(100vh-190px)] flex flex-col">
                 <h2 class="text-xl text-crispWhite mb-4 flex justify-between items-baseline">
                     <span>Player Pool</span>
                     <span id="playerCount" class="text-actionOrange stats-font text-lg font-bold">(0)</span>
                 </h2>
-                
-                <!-- Inputs and Quick Filter Matrices -->
                 <div class="space-y-3 mb-4">
-                    <input id="searchInput" type="text" placeholder="Filter by player or team keyword..." class="w-full bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm focus:outline-none focus:border-actionOrange text-crispWhite transition placeholder-slate-500 font-medium" />
-                    
+                    <input id="searchInput" type="text" placeholder="Search..." class="w-full bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm focus:outline-none focus:border-actionOrange text-crispWhite" />
                     <div class="flex flex-wrap gap-1" id="filterContainer">
-                        <button data-pos="ALL" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-actionOrange text-stadium transition">ALL</button>
-                        <button data-pos="QB" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">QB</button>
-                        <button data-pos="RB" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">RB</button>
-                        <button data-pos="WR" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">WR</button>
-                        <button data-pos="TE" class="filter-btn px-3 py-1 rounded text-xs font-extrabold tracking-widest bg-surfaceHigh text-crispWhite hover:bg-slate-600 transition">TE</button>
+                        <button data-pos="ALL" class="filter-btn px-3 py-1 rounded text-xs font-extrabold bg-actionOrange text-stadium">ALL</button>
+                        <button data-pos="QB" class="filter-btn px-3 py-1 rounded text-xs font-extrabold bg-surfaceHigh">QB</button>
+                        <button data-pos="RB" class="filter-btn px-3 py-1 rounded text-xs font-extrabold bg-surfaceHigh">RB</button>
+                        <button data-pos="WR" class="filter-btn px-3 py-1 rounded text-xs font-extrabold bg-surfaceHigh">WR</button>
+                        <button data-pos="TE" class="filter-btn px-3 py-1 rounded text-xs font-extrabold bg-surfaceHigh">TE</button>
                     </div>
                 </div>
-
-                <!-- Live Drag Asset Engine Container -->
                 <div id="playerPoolList" class="overflow-y-auto flex-1 pr-1 space-y-2"></div>
             </div>
 
-            <!-- Right Center: Fluid Matrix of Team Target Fields (8/9 Columns) -->
             <div id="rosterGrid" class="lg:col-span-8 xl:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-start overflow-y-auto h-[calc(100vh-190px)] pr-1"></div>
         </div>
     </div>
 
-    <!-- Live Execution Logic Matrix -->
     <script>
-        // High-Tier Mock Rankings Initial Population Map
         let players = [
             { id: 1, name: "Christian McCaffrey", pos: "RB", team: "SF" },
             { id: 2, name: "CeeDee Lamb", pos: "WR", team: "DAL" },
@@ -127,36 +93,23 @@
             { id: 7, name: "Travis Kelce", pos: "TE", team: "KC" },
             { id: 8, name: "Breece Hall", pos: "RB", team: "NYJ" },
             { id: 9, name: "Amon-Ra St. Brown", pos: "WR", team: "DET" },
-            { id: 10, name: "Lamar Jackson", pos: "QB", team: "BAL" },
-            { id: 11, name: "Saquon Barkley", pos: "RB", team: "PHI" },
-            { id: 12, name: "Sam LaPorta", pos: "TE", team: "DET" }
+            { id: 10, name: "Lamar Jackson", pos: "QB", team: "BAL" }
         ];
 
+        // Start with exactly one manager
         let users = [
-            { id: 1, name: "WAR ROOM ALPHA", roster: [] },
-            { id: 2, name: "WAR ROOM BRAVO", roster: [] }
+            { id: Date.now(), name: "INITIAL MANAGER", roster: [] }
         ];
 
         let history = [];
         let currentFilter = "ALL";
         let currentSearch = "";
 
-        // Component DOM Interventions
         const playerPoolList = document.getElementById('playerPoolList');
         const rosterGrid = document.getElementById('rosterGrid');
-        const playerCount = document.getElementById('playerCount');
         const searchInput = document.getElementById('searchInput');
         const userForm = document.getElementById('userForm');
-        const userNameInput = document.getElementById('userNameInput');
         const undoBtn = document.getElementById('undoBtn');
-
-        function saveHistory() {
-            history.push({
-                players: JSON.parse(JSON.stringify(players)),
-                users: JSON.parse(JSON.stringify(users))
-            });
-            undoBtn.disabled = false;
-        }
 
         function renderAll() {
             renderPlayers();
@@ -165,131 +118,119 @@
 
         function renderPlayers() {
             playerPoolList.innerHTML = '';
-            
-            const filtered = players.filter(p => {
-                const matchesSearch = p.name.toLowerCase().includes(currentSearch) || p.team.toLowerCase().includes(currentSearch);
-                const matchesPos = currentFilter === "ALL" || p.pos === currentFilter;
-                return matchesSearch && matchesPos;
-            });
-
-            playerCount.textContent = `(${filtered.length})`;
-
-            if (filtered.length === 0) {
-                playerPoolList.innerHTML = `<p class="text-center text-slate-500 text-sm mt-8 font-semibold uppercase tracking-wider">No active assets match</p>`;
-                return;
-            }
-
+            const filtered = players.filter(p => (p.name.toLowerCase().includes(currentSearch) || p.team.toLowerCase().includes(currentSearch)) && (currentFilter === "ALL" || p.pos === currentFilter));
+            document.getElementById('playerCount').textContent = `(${filtered.length})`;
             filtered.forEach(player => {
                 const card = document.createElement('div');
-                // Adhering to technical sharp border execution & low-contrast outline metrics
-                card.className = "bg-surface p-3 rounded border border-surfaceHigh/60 cursor-grab active:cursor-grabbing hover:border-actionOrange transition-all duration-150 flex justify-between items-center group shadow-md";
+                card.className = "bg-surface p-3 rounded border border-surfaceHigh/60 cursor-grab flex justify-between items-center group transition hover:border-actionOrange";
                 card.draggable = true;
-                card.dataset.id = player.id;
-                
-                card.innerHTML = `
-                    <div>
-                        <span class="font-semibold block text-crispWhite group-hover:text-actionOrange transition duration-150">${player.name}</span>
-                        <span class="text-xs text-slate-400 stats-font uppercase tracking-wider">${player.team}</span>
-                    </div>
-                    <!-- Technical Stamp Position Tag: Zero Border Corners -->
-                    <span class="text-xs font-extrabold px-2.5 py-1 rounded-none bg-skyTechnical text-stadium stats-font">${player.pos}</span>
-                `;
-
-                card.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', player.id);
-                });
-
+                card.innerHTML = `<div><span class="font-semibold block text-crispWhite group-hover:text-actionOrange transition">${player.name}</span><span class="text-xs text-slate-400 stats-font uppercase">${player.team}</span></div><span class="text-xs font-extrabold px-2.5 py-1 bg-skyTechnical text-stadium stats-font">${player.pos}</span>`;
+                card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', player.id));
                 playerPoolList.appendChild(card);
             });
         }
 
         function renderRosters() {
             rosterGrid.innerHTML = '';
-            
             users.forEach(user => {
                 const zone = document.createElement('div');
-                // Tonal Layers combined with clean dashed outlines
-                zone.className = "bg-surface/40 border-2 border-dashed border-surfaceHigh/80 hover:border-actionOrange/50 rounded-lg p-4 transition-all duration-200 min-h-[240px] flex flex-col";
+                zone.className = "bg-surface/40 border-2 border-dashed border-surfaceHigh/80 rounded-lg p-4 flex flex-col min-h-[240px]";
                 
-                let rosterItemsHTML = user.roster.map((player, idx) => `
-                    <div class="bg-surface px-4 py-2 rounded border border-surfaceHigh/50 flex justify-between items-center text-sm transition hover:border-slate-500">
-                        <span class="text-crispWhite font-medium"><span class="text-slate-500 stats-font mr-2">${String(idx + 1).padStart(2, '0')}.</span>${player.name}</span>
-                        <span class="text-xs stats-font text-skyTechnical font-bold uppercase tracking-wider">${player.pos} · ${player.team}</span>
-                    </div>
-                `).join('');
-
-                if (user.roster.length === 0) {
-                    rosterItemsHTML = `<div class="h-full flex-1 flex items-center justify-center text-slate-600 font-extrabold text-xs uppercase tracking-widest py-12 select-none pointer-events-none">Empty Target field // Drop to Draft</div>`;
-                }
+                const isOnlyUser = users.length === 1;
 
                 zone.innerHTML = `
-                    <h3 class="text-lg text-crispWhite border-b border-surfaceHigh/80 pb-2 mb-3 flex justify-between items-center tracking-wide">
-                        <span>${user.name}</span>
-                        <span class="text-xs font-normal text-actionOrange stats-font bg-stadium px-2 py-0.5 rounded border border-surfaceHigh/50">${user.roster.length} ASSETS</span>
-                    </h3>
-                    <div class="space-y-2 flex-1 layout-zone">${rosterItemsHTML}</div>
+                    <div class="border-b border-surfaceHigh/80 pb-2 mb-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="text-lg text-crispWhite tracking-wide">${user.name}</h3>
+                            <div class="flex gap-2">
+                                <button onclick="editUser(${user.id})" class="text-[10px] font-bold text-skyTechnical hover:text-crispWhite uppercase transition">Edit</button>
+                                ${!isOnlyUser ? `<button onclick="removeUser(${user.id})" class="text-[10px] font-bold text-rose-500 hover:text-crispWhite uppercase transition">Delete</button>` : ''}
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold text-actionOrange stats-font uppercase tracking-tighter">${user.roster.length} ASSETS DRAFTED</span>
+                    </div>
+                    <div class="space-y-2 flex-1" ondragover="event.preventDefault()" ondrop="handleDrop(event, ${user.id})">
+                        ${user.roster.map((p, i) => `
+                            <div class="bg-surface px-3 py-1.5 rounded border border-surfaceHigh/50 flex justify-between items-center text-xs">
+                                <span class="text-crispWhite"><span class="text-slate-500 mr-2">${i+1}</span>${p.name}</span>
+                                <span class="stats-font text-skyTechnical font-bold uppercase">${p.pos}</span>
+                            </div>
+                        `).join('') || '<div class="h-24 flex items-center justify-center text-slate-600 font-extrabold text-[10px] uppercase tracking-widest text-center">Ready for Personnel Input</div>'}
+                    </div>
                 `;
-
-                zone.addEventListener('dragover', (e) => e.preventDefault());
-                
-                zone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const playerId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                    const playerIndex = players.findIndex(p => p.id === playerId);
-                    
-                    if (playerIndex !== -1) {
-                        saveHistory();
-                        const [player] = players.splice(playerIndex, 1);
-                        user.roster.push(player);
-                        renderAll();
-                    }
-                });
-
                 rosterGrid.appendChild(zone);
             });
         }
 
-        // Functional Listeners & Event Mapping Blocks
-        searchInput.addEventListener('input', (e) => {
-            currentSearch = e.target.value.toLowerCase();
-            renderPlayers();
-        });
-
-        document.getElementById('filterContainer').addEventListener('click', (e) => {
-            if (e.target.classList.contains('filter-btn')) {
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('bg-actionOrange', 'text-stadium');
-                    btn.classList.add('bg-surfaceHigh', 'text-crispWhite', 'hover:bg-slate-600');
-                });
-                e.target.classList.remove('bg-surfaceHigh', 'text-crispWhite', 'hover:bg-slate-600');
-                e.target.className += ' bg-actionOrange text-stadium';
-                
-                currentFilter = e.target.dataset.pos;
-                renderPlayers();
+        function handleDrop(e, userId) {
+            e.preventDefault();
+            const playerId = parseInt(e.dataTransfer.getData('text/plain'));
+            const playerIndex = players.findIndex(p => p.id === playerId);
+            if (playerIndex !== -1) {
+                saveHistory();
+                const [player] = players.splice(playerIndex, 1);
+                users.find(u => u.id === userId).roster.push(player);
+                renderAll();
             }
-        });
+        }
+
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            const newName = prompt("Enter new name for " + user.name + ":", user.name);
+            if (newName && newName.trim()) {
+                saveHistory();
+                user.name = newName.trim().toUpperCase();
+                renderAll();
+            }
+        }
+
+        function removeUser(id) {
+            if (users.length <= 1) return; // Safeguard to always have one existing
+            if (confirm("Are you sure you want to remove this manager? Any drafted players will be returned to the pool.")) {
+                saveHistory();
+                const userIndex = users.findIndex(u => u.id === id);
+                const [removedUser] = users.splice(userIndex, 1);
+                players = [...players, ...removedUser.roster]; // Return players to pool
+                renderAll();
+            }
+        }
+
+        function saveHistory() {
+            history.push({ players: JSON.parse(JSON.stringify(players)), users: JSON.parse(JSON.stringify(users)) });
+            undoBtn.disabled = false;
+        }
 
         userForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = userNameInput.value.trim().toUpperCase();
+            const name = document.getElementById('userNameInput').value.trim().toUpperCase();
             if (name) {
-                users.push({ id: Date.now(), name: name, roster: [] });
-                userNameInput.value = '';
-                renderRosters();
+                saveHistory();
+                users.push({ id: Date.now(), name, roster: [] });
+                document.getElementById('userNameInput').value = '';
+                renderAll();
             }
         });
 
         undoBtn.addEventListener('click', () => {
             if (history.length > 0) {
-                const previous = history.pop();
-                players = previous.players;
-                users = previous.users;
+                const prev = history.pop();
+                players = prev.players;
+                users = prev.users;
                 if (history.length === 0) undoBtn.disabled = true;
                 renderAll();
             }
         });
 
-        // Initialize Native Core Configuration
+        searchInput.addEventListener('input', (e) => { currentSearch = e.target.value.toLowerCase(); renderPlayers(); });
+        document.getElementById('filterContainer').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.replace('bg-actionOrange', 'bg-surfaceHigh'));
+                e.target.classList.replace('bg-surfaceHigh', 'bg-actionOrange');
+                currentFilter = e.target.dataset.pos;
+                renderPlayers();
+            }
+        });
+
         renderAll();
     </script>
 </body>
