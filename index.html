@@ -96,7 +96,6 @@
             { id: 10, name: "Lamar Jackson", pos: "QB", team: "BAL" }
         ];
 
-        // Start with exactly one manager
         let users = [
             { id: Date.now(), name: "INITIAL MANAGER", roster: [] }
         ];
@@ -151,15 +150,29 @@
                     </div>
                     <div class="space-y-2 flex-1" ondragover="event.preventDefault()" ondrop="handleDrop(event, ${user.id})">
                         ${user.roster.map((p, i) => `
-                            <div class="bg-surface px-3 py-1.5 rounded border border-surfaceHigh/50 flex justify-between items-center text-xs">
+                            <div class="bg-surface px-3 py-1.5 rounded border border-surfaceHigh/50 flex justify-between items-center text-xs group">
                                 <span class="text-crispWhite"><span class="text-slate-500 mr-2">${i+1}</span>${p.name}</span>
-                                <span class="stats-font text-skyTechnical font-bold uppercase">${p.pos}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="stats-font text-skyTechnical font-bold uppercase">${p.pos}</span>
+                                    <button onclick="releasePlayer(${user.id}, ${p.id})" class="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-rose-500 hover:text-rose-400 uppercase transition-opacity">Remove</button>
+                                </div>
                             </div>
                         `).join('') || '<div class="h-24 flex items-center justify-center text-slate-600 font-extrabold text-[10px] uppercase tracking-widest text-center">Ready for Personnel Input</div>'}
                     </div>
                 `;
                 rosterGrid.appendChild(zone);
             });
+        }
+
+        function releasePlayer(userId, playerId) {
+            saveHistory();
+            const user = users.find(u => u.id === userId);
+            const playerIndex = user.roster.findIndex(p => p.id === playerId);
+            const [player] = user.roster.splice(playerIndex, 1);
+            players.push(player);
+            // Sort players for consistent pool view
+            players.sort((a, b) => a.id - b.id);
+            renderAll();
         }
 
         function handleDrop(e, userId) {
@@ -185,12 +198,13 @@
         }
 
         function removeUser(id) {
-            if (users.length <= 1) return; // Safeguard to always have one existing
+            if (users.length <= 1) return;
             if (confirm("Are you sure you want to remove this manager? Any drafted players will be returned to the pool.")) {
                 saveHistory();
                 const userIndex = users.findIndex(u => u.id === id);
                 const [removedUser] = users.splice(userIndex, 1);
-                players = [...players, ...removedUser.roster]; // Return players to pool
+                players = [...players, ...removedUser.roster];
+                players.sort((a, b) => a.id - b.id);
                 renderAll();
             }
         }
