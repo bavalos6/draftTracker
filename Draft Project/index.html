@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In-Person NFL Fantasy Draft Board</title>
+    
+    <!-- Stable Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React 18 Production Builds -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Stable Babel Standalone -->
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+    <div id="root"></div>
+
+    <script data-type="text/babel">
+        const { useState } = React;
+
+        // Sample initial dataset
+        const INITIAL_PLAYERS = [
+            { id: 1, name: "Christian McCaffrey", pos: "RB", team: "SF" },
+            { id: 2, name: "CeeDee Lamb", pos: "WR", team: "DAL" },
+            { id: 3, name: "Tyreek Hill", pos: "WR", team: "MIA" },
+            { id: 4, name: "Justin Jefferson", pos: "WR", team: "MIN" },
+            { id: 5, name: "Patrick Mahomes", pos: "QB", team: "KC" },
+            { id: 6, name: "Josh Allen", pos: "QB", team: "BUF" },
+            { id: 7, name: "Travis Kelce", pos: "TE", team: "KC" },
+            { id: 8, name: "Breece Hall", pos: "RB", team: "NYJ" },
+            { id: 9, name: "Amon-Ra St. Brown", pos: "WR", team: "DET" },
+            { id: 10, name: "Lamar Jackson", pos: "QB", team: "BAL" },
+            { id: 11, name: "Saquon Barkley", pos: "RB", team: "PHI" },
+            { id: 12, name: "Sam LaPorta", pos: "TE", team: "DET" }
+        ];
+
+        function DraftApp() {
+            const [players, setPlayers] = useState(INITIAL_PLAYERS);
+            const [users, setUsers] = useState([
+                { id: 1, name: "Manager 1", roster: [] },
+                { id: 2, name: "Manager 2", roster: [] }
+            ]);
+            const [newUserName, setNewUserName] = useState("");
+            const [search, setSearch] = useState("");
+            const [posFilter, setPosFilter] = useState("ALL");
+            const [history, setHistory] = useState([]); // For undo action
+
+            // User Management
+            const addUser = (e) => {
+                e.preventDefault();
+                if (!newUserName.trim()) return;
+                setUsers([...users, { id: Date.now(), name: newUserName.trim(), roster: [] }]);
+                setNewUserName("");
+            };
+
+            // Drag and Drop Logic
+            const handleDragStart = (e, playerId) => {
+                e.dataTransfer.setData("text/plain", playerId);
+            };
+
+            const handleDrop = (e, userId) => {
+                e.preventDefault();
+                const playerId = parseInt(e.dataTransfer.getData("text/plain"), 10);
+                const player = players.find(p => p.id === playerId);
+                
+                if (!player) return;
+
+                // Save current state to history before changing
+                setHistory([...history, { players: JSON.parse(JSON.stringify(players)), users: JSON.parse(JSON.stringify(users)) }]);
+
+                // Update users' rosters
+                setUsers(users.map(user => {
+                    if (user.id === userId) {
+                        return { ...user, roster: [...user.roster, player] };
+                    }
+                    return user;
+                }));
+
+                // Remove player from the board
+                setPlayers(players.filter(p => p.id !== playerId));
+            };
+
+            const undoLastPick = () => {
+                if (history.length === 0) return;
+                const previousState = history[history.length - 1];
+                setPlayers(previousState.players);
+                setUsers(previousState.users);
+                setHistory(history.slice(0, -1));
+            };
+
+            // Filtering logic
+            const filteredPlayers = players.filter(player => {
+                const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase()) || 
+                                      player.team.toLowerCase().includes(search.toLowerCase());
+                const matchesPos = posFilter === "ALL" || player.pos === posFilter;
+                return matchesSearch && matchesPos;
+            });
+
+            return (
+                <div className="p-6 max-w-7xl mx-auto">
+                    {/* Header Actions */}
+                    <header className="flex flex-wrap justify-between items-center gap-4 mb-8 border-b border-slate-700 pb-4">
+                        <div>
+                            <h1 className="text-3xl font-extrabold text-amber-400">🏈 Offline Draft Board</h1>
+                            <p className="text-slate-400 text-sm">Drag players onto team rosters to draft them.</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button 
+                                onClick={undoLastPick}
+                                disabled={history.length === 0}
+                                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg font-medium transition"
+                            >
+                                Undo Last Pick
+                            </button>
+                            <form onSubmit={addUser} className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    placeholder="Add Manager Name" 
+                                    value={newUserName}
+                                    onChange={(e) => setNewUserName(e.target.value)}
+                                    className="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-amber-400 text-white"
+                                />
+                                <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-lg text-sm transition">
+                                    + Add Team
+                                </button>
+                            </form>
+                        </div>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Left Column: Player Pool */}
+                        <div className="lg:col-span-1 bg-slate-800/50 p-4 rounded-xl border border-slate-700 h-[calc(100vh-180px)] flex flex-col">
+                            <h2 className="text-xl font-bold mb-4 flex justify-between">
+                                <span>Available Players</span>
+                                <span className="text-amber-400 font-mono">({filteredPlayers.length})</span>
+                            </h2>
+                            
+                            {/* Search & Filter Controls */}
+                            <div className="space-y-2 mb-4">
+                                <input 
+                                    type="text" 
+                                    placeholder="Search by name or team..." 
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-amber-400 text-white"
+                                />
+                                <div className="flex flex-wrap gap-1">
+                                    {["ALL", "QB", "RB", "WR", "TE"].map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => setPosFilter(pos)}
+                                            className={`px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider transition ${posFilter === pos ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 hover:bg-slate-600'}`}
+                                        >
+                                            {pos}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Draggable List */}
+                            <div className="overflow-y-auto flex-1 pr-1 space-y-2">
+                                {filteredPlayers.map(player => (
+                                    <div 
+                                        key={player.id}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, player.id)}
+                                        className="bg-slate-800 p-3 rounded-lg border border-slate-700 cursor-grab active:cursor-grabbing hover:border-amber-500/50 transition flex justify-between items-center group"
+                                    >
+                                        <div>
+                                            <span className="font-bold block group-hover:text-amber-400 transition">{player.name}</span>
+                                            <span className="text-xs text-slate-400 font-mono uppercase">{player.team}</span>
+                                        </div>
+                                        <span className="text-xs font-bold px-2 py-1 rounded bg-slate-700 text-slate-300">{player.pos}</span>
+                                    </div>
+                                ))}
+                                {filteredPlayers.length === 0 && (
+                                    <p className="text-center text-slate-500 text-sm mt-8">No available players found.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right/Center Columns: Team Rosters (Drop Zones) */}
+                        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-start overflow-y-auto h-[calc(100vh-180px)] pr-1">
+                            {users.map(user => (
+                                <div 
+                                    key={user.id}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={(e) => handleDrop(e, user.id)}
+                                    className="bg-slate-800/30 border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-xl p-4 transition min-h-[220px] flex flex-col"
+                                >
+                                    <h3 className="font-bold border-b border-slate-700 pb-2 mb-2 flex justify-between text-slate-200">
+                                        <span>{user.name}</span>
+                                        <span className="text-xs text-slate-400 font-normal">{user.roster.length} players</span>
+                                    </h3>
+                                    <div className="space-y-1.5 flex-1">
+                                        {user.roster.map((player, idx) => (
+                                            <div key={idx} className="bg-slate-800 px-3 py-1.5 rounded border border-slate-700 flex justify-between items-center text-sm">
+                                                <span><span className="text-slate-500 font-mono mr-2">{idx + 1}.</span>{player.name}</span>
+                                                <span className="text-xs font-mono text-slate-400 uppercase">{player.pos} - {player.team}</span>
+                                            </div>
+                                        ))}
+                                        {user.roster.length === 0 && (
+                                            <div className="h-full flex items-center justify-center text-slate-600 text-xs py-8">
+                                                Drop player here to draft
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DraftApp />);
+    </script>
+</body>
+</html>
