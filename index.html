@@ -27,7 +27,9 @@
         }
     </script>
     <style>
-        h1, h2, h3 {
+        h1,
+        h2,
+        h3 {
             font-family: 'Anton', sans-serif;
             text-transform: uppercase;
             letter-spacing: 0.02em;
@@ -41,9 +43,18 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0F172A; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0F172A;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
 
         .loading-shimmer {
             background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
@@ -52,8 +63,13 @@
         }
 
         @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         /* Player headshot image */
@@ -92,7 +108,7 @@
     <div class="max-w-[1440px] mx-auto">
         <header class="flex flex-wrap justify-between items-center gap-6 mb-8 border-b border-surfaceHigh pb-5">
             <div>
-                <h1 class="text-4xl md:text-5xl font-normal text-crispWhite tracking-wider">🏈 APEX ATHLETICS</h1>
+                <h1 class="text-4xl md:text-5xl font-normal text-crispWhite tracking-wider">FORTNITOS FANTASY</h1>
                 <p id="apiStatus" class="text-skyTechnical uppercase text-xs tracking-widest font-extrabold mt-1">
                     FETCHING 2026-2027 ROSTERS...</p>
             </div>
@@ -183,7 +199,7 @@
                 .map(w => w[0])
                 .slice(0, 2)
                 .join('');
-            return `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' rx='20' fill='%23334155'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' font-weight='700' fill='%2338BDF8'>${encodeURIComponent(initials)}</text></svg>`;
+            return `data:image/svg+xml,'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="20" fill="%23334155"/><text x="50%25" y="54%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="%2338BDF8">${encodeURIComponent(initials)}</text></svg>'`;
         }
 
         function imgTag(player, cls = 'player-thumb') {
@@ -205,7 +221,19 @@
                 const data = await response.json();
 
                 players = Object.values(data)
-                    .filter(p => p.active && ["QB", "RB", "WR", "TE", "K", "DEF"].includes(p.position))
+                    .filter(p => {
+                        // 1. Must be an active player/asset
+                        if (!p.active) return false;
+
+                        // 2. Allow standard offensive positions & kickers
+                        const isOffenseOrKicker = ["QB", "RB", "WR", "TE", "K"].includes(p.position);
+
+                        // 3. Keep Team Defenses, but drop individual defensive players (IDP)
+                        // Sleeper Team DEFs have a non-numeric player_id matching their team abbreviation
+                        const isTeamDefense = (p.position === "DEF" && isNaN(p.player_id));
+
+                        return isOffenseOrKicker || isTeamDefense;
+                    })
                     .map(p => ({
                         id: p.player_id,
                         name: p.full_name || `${p.first_name} ${p.last_name}`,
