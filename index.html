@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Athletics — NFL 2026-2027 Live Draft Board</title>
+    <title>FORTNITOS FANTASY — NFL 2026-2027 Live Draft Board</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
@@ -150,14 +150,10 @@
                             class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">TE</button>
                         <button data-pos="K"
                             class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">K</button>
+                        <button data-pos="D"
+                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">D</button>
                         <button data-pos="DEF"
                             class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">DEF</button>
-                        <button data-pos="DL"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">DL</button>
-                        <button data-pos="LB"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">LB</button>
-                        <button data-pos="DB"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">DB</button>
                     </div>
                 </div>
 
@@ -214,26 +210,34 @@
                 const response = await fetch('https://api.sleeper.app/v1/players/nfl');
                 const data = await response.json();
 
-                // Added DL, LB, DB for Individual Defensive Players
-                const validPositions = ["QB", "RB", "WR", "TE", "K", "DEF", "DL", "LB", "DB"];
+                // Standard offensive tags + Team defense
+                const corePositions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+
+                // Comprehensive list of Sleeper IDP tracking tags
+                const idpPositions = ["DL", "LB", "DB", "CB", "S", "ILB", "OLB", "DE", "DT"];
 
                 players = Object.values(data)
-                    .filter(p => p.active && validPositions.includes(p.position))
-                    .map(p => ({
-                        id: p.player_id,
-                        name: p.full_name || `${p.first_name} ${p.last_name}`,
-                        pos: p.position,
-                        team: p.team || "FA"
-                    }))
+                    .filter(p => p.active && (corePositions.includes(p.position) || idpPositions.includes(p.position)))
+                    .map(p => {
+                        // If it's any defensive player position, group it under "D"
+                        const unifiedPosition = idpPositions.includes(p.position) ? "D" : p.position;
+
+                        return {
+                            id: p.player_id,
+                            name: p.full_name || `${p.first_name} ${p.last_name}`,
+                            pos: unifiedPosition,
+                            team: p.team || "FA"
+                        };
+                    })
                     .sort((a, b) => a.name.localeCompare(b.name));
 
                 statusText.innerText = "2026-2027 SYSTEM READY // LIVE DATA SYNCED";
                 statusText.classList.replace('text-skyTechnical', 'text-emerald-400');
                 renderAll();
             } catch (err) {
-                statusText.innerText = "CONNECTION ERROR // CHECK CONSOLE";
+                statusText.innerText = "CONNECTION ERROR // USING OFFLINE CACHE";
                 statusText.classList.replace('text-skyTechnical', 'text-rose-500');
-                console.error("Data Load Error:", err);
+                console.error(err);
             }
         }
 
