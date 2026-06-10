@@ -72,38 +72,6 @@
             }
         }
 
-        .player-thumb {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            object-position: top center;
-            background: #334155;
-            flex-shrink: 0;
-            border: 2px solid #334155;
-        }
-
-        .player-thumb.def-thumb {
-            object-position: center;
-            border-radius: 6px;
-        }
-
-        .roster-thumb {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            object-fit: cover;
-            object-position: top center;
-            background: #334155;
-            flex-shrink: 0;
-            border: 1.5px solid #334155;
-        }
-
-        .roster-thumb.def-thumb {
-            border-radius: 4px;
-        }
-
-        /* Fallback canvas placeholders */
         .thumb-placeholder {
             display: inline-flex;
             align-items: center;
@@ -127,6 +95,7 @@
             width: 30px;
             height: 30px;
             border-radius: 50%;
+            border-width: 1.5px;
         }
 
         .thumb-placeholder.sz30.def {
@@ -136,6 +105,94 @@
         .thumb-placeholder svg {
             width: 60%;
             height: 60%;
+        }
+
+        /* Team filter panel */
+        #teamFilterPanel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        #teamFilterPanel.open {
+            max-height: 420px;
+        }
+
+        /* Custom checkbox */
+        .team-cb {
+            display: none;
+        }
+
+        .team-cb-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            color: #94a3b8;
+            border: 1px solid transparent;
+            transition: all 0.12s;
+            white-space: nowrap;
+        }
+
+        .team-cb:checked+.team-cb-label {
+            color: #F8FAFC;
+            background: #1E3A4C;
+            border-color: #38BDF8;
+        }
+
+        .team-cb-label:hover {
+            color: #F8FAFC;
+            background: #334155;
+        }
+
+        .team-cb-label .cb-box {
+            width: 10px;
+            height: 10px;
+            border: 1.5px solid #475569;
+            border-radius: 2px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s;
+        }
+
+        .team-cb:checked+.team-cb-label .cb-box {
+            background: #38BDF8;
+            border-color: #38BDF8;
+        }
+
+        .cb-check {
+            display: none;
+        }
+
+        .team-cb:checked+.team-cb-label .cb-check {
+            display: block;
+        }
+
+        /* Sort toggle */
+        .sort-btn {
+            transition: all 0.15s;
+        }
+
+        .sort-btn.active {
+            background: #FB923C;
+            color: #0F172A;
+        }
+
+        /* Points badge */
+        .pts-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            color: #FB923C;
+            letter-spacing: -0.02em;
         }
     </style>
 </head>
@@ -163,41 +220,90 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- LEFT PANEL -->
             <div
-                class="lg:col-span-4 xl:col-span-3 bg-surface p-5 rounded-lg border border-surfaceHigh h-[calc(100vh-190px)] flex flex-col">
-                <h2 class="text-xl text-crispWhite mb-4 flex justify-between items-baseline">
+                class="lg:col-span-4 xl:col-span-3 bg-surface p-5 rounded-lg border border-surfaceHigh h-[calc(100vh-190px)] flex flex-col gap-3">
+
+                <!-- Title + count -->
+                <h2 class="text-xl text-crispWhite flex justify-between items-baseline flex-none">
                     <span>Player Pool</span>
                     <span id="playerCount" class="text-actionOrange stats-font text-lg font-bold">---</span>
                 </h2>
-                <div class="space-y-3 mb-4">
-                    <input id="searchInput" type="text" placeholder="Search name or team (e.g. SEA)..."
-                        class="w-full bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm focus:outline-none focus:border-actionOrange text-crispWhite" />
-                    <div class="flex flex-wrap gap-1" id="filterContainer">
-                        <button data-pos="ALL"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-actionOrange text-stadium">ALL</button>
-                        <button data-pos="QB"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">QB</button>
-                        <button data-pos="RB"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">RB</button>
-                        <button data-pos="WR"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">WR</button>
-                        <button data-pos="TE"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">TE</button>
-                        <button data-pos="K"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">K</button>
-                        <button data-pos="D"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">D</button>
-                        <button data-pos="DEF"
-                            class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">DEF</button>
+
+                <!-- Name search -->
+                <input id="searchInput" type="text" placeholder="Search player name..."
+                    class="w-full bg-surfaceDim border border-surfaceHigh px-4 py-2.5 rounded text-sm focus:outline-none focus:border-actionOrange text-crispWhite flex-none" />
+
+                <!-- Position filter -->
+                <div class="flex flex-wrap gap-1 flex-none" id="filterContainer">
+                    <button data-pos="ALL"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-actionOrange text-stadium">ALL</button>
+                    <button data-pos="QB"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">QB</button>
+                    <button data-pos="RB"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">RB</button>
+                    <button data-pos="WR"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">WR</button>
+                    <button data-pos="TE"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">TE</button>
+                    <button data-pos="K"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">K</button>
+                    <button data-pos="D"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">D</button>
+                    <button data-pos="DEF"
+                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">DEF</button>
+                </div>
+
+                <!-- Sort toggle -->
+                <div class="flex items-center gap-2 flex-none">
+                    <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Sort:</span>
+                    <button id="sortPts"
+                        class="sort-btn active px-3 py-1 rounded text-[10px] font-extrabold bg-actionOrange text-stadium uppercase tracking-wider">⭐
+                        Points</button>
+                    <button id="sortAZ"
+                        class="sort-btn px-3 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-slate-300 uppercase tracking-wider">A–Z</button>
+                    <span id="statsLoadingBadge" class="text-[9px] text-slate-500 stats-font">loading stats…</span>
+                </div>
+
+                <!-- Team filter toggle button -->
+                <button id="teamFilterToggle"
+                    class="flex-none flex items-center justify-between px-3 py-2 bg-surfaceDim border border-surfaceHigh rounded text-[11px] font-bold text-slate-300 hover:border-skyTechnical hover:text-crispWhite transition">
+                    <span>🏈 FILTER BY TEAM</span>
+                    <span id="teamFilterCount" class="text-skyTechnical stats-font text-[10px]">ALL 33</span>
+                </button>
+
+                <!-- Team filter panel (collapsible) -->
+                <div id="teamFilterPanel"
+                    class="flex-none bg-surfaceDim rounded border border-surfaceHigh/60 overflow-hidden">
+                    <div class="p-2">
+                        <!-- Select All / Clear All -->
+                        <div class="flex gap-2 mb-2 pb-2 border-b border-surfaceHigh">
+                            <button onclick="setAllTeams(true)"
+                                class="px-2 py-1 bg-skyTechnical/20 hover:bg-skyTechnical/40 text-skyTechnical text-[9px] font-extrabold rounded uppercase tracking-wider transition">✓
+                                All</button>
+                            <button onclick="setAllTeams(false)"
+                                class="px-2 py-1 bg-rose-900/30 hover:bg-rose-900/60 text-rose-400 text-[9px] font-extrabold rounded uppercase tracking-wider transition">✕
+                                Clear</button>
+                            <input id="teamSearch" type="text" placeholder="Filter teams..."
+                                class="flex-1 bg-surfaceHigh/50 border border-surfaceHigh px-2 py-1 rounded text-[10px] text-crispWhite focus:outline-none focus:border-actionOrange" />
+                        </div>
+                        <!-- Team grid -->
+                        <div id="teamCheckboxGrid"
+                            class="grid grid-cols-3 gap-y-0.5 gap-x-1 overflow-y-auto max-h-[280px] pr-1">
+                            <!-- injected by JS -->
+                        </div>
                     </div>
                 </div>
-                <div id="playerPoolList" class="overflow-y-auto flex-1 pr-1 space-y-2">
+
+                <!-- Player list -->
+                <div id="playerPoolList" class="overflow-y-auto flex-1 pr-1 space-y-2 min-h-0">
                     <div class="loading-shimmer h-14 rounded mb-2"></div>
                     <div class="loading-shimmer h-14 rounded mb-2"></div>
                     <div class="loading-shimmer h-14 rounded mb-2"></div>
                 </div>
             </div>
 
+            <!-- RIGHT: Roster grid -->
             <div id="rosterGrid"
                 class="lg:col-span-8 xl:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 auto-rows-start overflow-y-auto h-[calc(100vh-190px)] pr-1">
             </div>
@@ -205,85 +311,170 @@
     </div>
 
     <script>
-        // ─── Silhouette SVGs (no quotes inside, safe to embed anywhere) ───────────────
-        const SILHOUETTE_PLAYER = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="20" cy="13" r="7" fill="#475569"/>
-  <path d="M4 38 C4 27 10 22 20 22 C30 22 36 27 36 38Z" fill="#475569"/>
-</svg>`;
+        // ─── SVG Silhouettes ──────────────────────────────────────────────────────────
+        const SILHOUETTE_PLAYER = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="13" r="7" fill="#475569"/><path d="M4 38 C4 27 10 22 20 22 C30 22 36 27 36 38Z" fill="#475569"/></svg>`;
+        const SILHOUETTE_DEF = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M20 4 L34 10 L34 21 C34 29 27.5 35.5 20 38 C12.5 35.5 6 29 6 21 L6 10 Z" fill="#334155"/><path d="M20 8 L30 13 L30 21 C30 27.5 25.5 33 20 35 C14.5 33 10 27.5 10 21 L10 13 Z" fill="#38BDF8" opacity="0.5"/><text x="20" y="25" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#38BDF8" opacity="0.9">DEF</text></svg>`;
 
-        const SILHOUETTE_DEF = `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-  <path d="M20 4 L34 10 L34 21 C34 29 27.5 35.5 20 38 C12.5 35.5 6 29 6 21 L6 10 Z" fill="#334155"/>
-  <path d="M20 8 L30 13 L30 21 C30 27.5 25.5 33 20 35 C14.5 33 10 27.5 10 21 L10 13 Z" fill="#38BDF8" opacity="0.5"/>
-  <text x="20" y="25" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="700" fill="#38BDF8" opacity="0.9">DEF</text>
-</svg>`;
+        function swapToSilhouette(imgEl, isDef) {
+            imgEl.style.display = 'none';
+            imgEl.parentElement.innerHTML = isDef ? SILHOUETTE_DEF : SILHOUETTE_PLAYER;
+            imgEl.onerror = null;
+        }
 
-        // ─── Thumb HTML helpers ───────────────────────────────────────────────────────
-        // Instead of embedding SVG in onerror attr (quote hell), we render a placeholder
-        // div with inline SVG directly — and only attempt the <img> if we have a real URL.
-
-        // ESPN CDN for team logos — widely hotlink-friendly
         function teamLogoUrl(team) {
             const t = team.toLowerCase();
-            // ESPN uses different abbrs for a few teams
             const espnMap = { lar: 'ram', lac: 'lac', sf: 'sf', tb: 'tb', gb: 'gb', kc: 'kc', ne: 'ne', no: 'no', nyg: 'nyg', nyj: 'nyj', lv: 'lv' };
-            const abbr = espnMap[t] || t;
-            return `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
+            return `https://a.espncdn.com/i/teamlogos/nfl/500/${espnMap[t] || t}.png`;
         }
+        function playerThumbUrl(id) { return `https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`; }
 
-        // Sleeper for player headshots
-        function playerThumbUrl(playerId) {
-            return `https://sleepercdn.com/content/nfl/players/thumb/${playerId}.jpg`;
-        }
-
-        // Renders the thumb element — tries real image, falls back to SVG placeholder
         function thumbHTML(player, size = 40, forRoster = false) {
             const isDef = player.pos === 'DEF';
             const szClass = size === 40 ? 'sz40' : 'sz30';
             const defClass = isDef ? ' def' : '';
             const borderR = isDef ? (size === 40 ? '6px' : '4px') : '50%';
             const border = forRoster ? '1.5px solid #334155' : '2px solid #334155';
-
             const url = isDef ? teamLogoUrl(player.team) : playerThumbUrl(player.id);
-            const fallbackSVG = isDef ? SILHOUETTE_DEF : SILHOUETTE_PLAYER;
-
-            // We use a container div. The img tries to load; on error we swap to SVG placeholder.
-            const escapedId = player.id.toString().replace(/'/g, '');
-            return `<span class="thumb-placeholder ${szClass}${defClass}" id="tp-${escapedId}-${size}" style="border-radius:${borderR};border:${border};">
-        <img src="${url}" 
-             style="width:100%;height:100%;object-fit:cover;object-position:${isDef ? 'center' : 'top center'};border-radius:inherit;display:block;"
-             alt="${player.name}"
-             onerror="swapToSilhouette(this, ${isDef})"
-             loading="lazy" />
+            return `<span class="thumb-placeholder ${szClass}${defClass}" style="border-radius:${borderR};border:${border};">
+        <img src="${url}" style="width:100%;height:100%;object-fit:cover;object-position:${isDef ? 'center' : 'top center'};border-radius:inherit;display:block;"
+             alt="${player.name}" onerror="swapToSilhouette(this,${isDef})" loading="lazy"/>
     </span>`;
         }
 
-        // Called on image error — replaces img with inline SVG silhouette
-        function swapToSilhouette(imgEl, isDef) {
-            imgEl.style.display = 'none';
-            const svg = isDef ? SILHOUETTE_DEF : SILHOUETTE_PLAYER;
-            imgEl.parentElement.innerHTML = svg;
-            imgEl.onerror = null;
-        }
+        // ─── All 32 NFL Teams (grouped by conf/div for display) ───────────────────────
+        const NFL_TEAMS = [
+            // AFC
+            'BUF', 'MIA', 'NE', 'NYJ',
+            'BAL', 'CIN', 'CLE', 'PIT',
+            'HOU', 'IND', 'JAX', 'TEN',
+            'DEN', 'KC', 'LV', 'LAC',
+            // NFC
+            'DAL', 'NYG', 'PHI', 'WAS',
+            'CHI', 'DET', 'GB', 'MIN',
+            'ATL', 'CAR', 'NO', 'TB',
+            'ARI', 'LAR', 'SEA', 'SF',
+        ];
+        const CONF_LABELS = { BUF: 'AFC East', MIA: 'AFC East', NE: 'AFC East', NYJ: 'AFC East', BAL: 'AFC North', CIN: 'AFC North', CLE: 'AFC North', PIT: 'AFC North', HOU: 'AFC South', IND: 'AFC South', JAX: 'AFC South', TEN: 'AFC South', DEN: 'AFC West', KC: 'AFC West', LV: 'AFC West', LAC: 'AFC West', DAL: 'NFC East', NYG: 'NFC East', PHI: 'NFC East', WAS: 'NFC East', CHI: 'NFC North', DET: 'NFC North', GB: 'NFC North', MIN: 'NFC North', ATL: 'NFC South', CAR: 'NFC South', NO: 'NFC South', TB: 'NFC South', ARI: 'NFC West', LAR: 'NFC West', SEA: 'NFC West', SF: 'NFC West' };
 
-        // ─── State ────────────────────────────────────────────────────────────────────
+        // State
         let isMobile = window.innerWidth < 1024;
         window.addEventListener('resize', () => { isMobile = window.innerWidth < 1024; renderAll(); });
 
         let players = [];
+        let seasonStats = {};      // playerId -> pts_ppr (2025 season totals)
+        let statsLoaded = false;
         let users = [{ id: Date.now(), name: "INITIAL MANAGER", roster: [] }];
         let history = [];
         let currentFilter = "ALL";
         let currentSearch = "";
+        let sortMode = "pts";      // "pts" | "az"
+        let selectedTeams = new Set([...NFL_TEAMS, 'FA']); // all checked by default
+        let teamFilterOpen = false;
 
         const poolList = document.getElementById('playerPoolList');
         const rosterGrid = document.getElementById('rosterGrid');
         const statusText = document.getElementById('apiStatus');
 
+        // ─── Build team checkbox grid ─────────────────────────────────────────────────
+        function buildTeamCheckboxes() {
+            const grid = document.getElementById('teamCheckboxGrid');
+            grid.innerHTML = '';
+
+            // Group by division label for visual dividers
+            let lastDiv = null;
+            const allTeamsWithFA = [...NFL_TEAMS, 'FA'];
+
+            allTeamsWithFA.forEach(team => {
+                const div = CONF_LABELS[team] || 'Free Agents';
+                if (div !== lastDiv) {
+                    lastDiv = div;
+                    const divider = document.createElement('div');
+                    divider.className = 'col-span-3 text-[8px] font-extrabold text-slate-600 uppercase tracking-widest pt-1.5 pb-0.5';
+                    divider.textContent = div;
+                    grid.appendChild(divider);
+                }
+                const id = `tcb-${team}`;
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `
+            <input type="checkbox" class="team-cb" id="${id}" data-team="${team}" ${selectedTeams.has(team) ? 'checked' : ''}>
+            <label for="${id}" class="team-cb-label">
+                <span class="cb-box"><svg class="cb-check" width="8" height="8" viewBox="0 0 8 8"><path d="M1 4L3 6L7 2" stroke="#0F172A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                ${team}
+            </label>`;
+                grid.appendChild(wrapper.firstElementChild);
+                grid.appendChild(wrapper.lastElementChild);
+            });
+
+            // Listen to changes
+            grid.querySelectorAll('.team-cb').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    if (cb.checked) selectedTeams.add(cb.dataset.team);
+                    else selectedTeams.delete(cb.dataset.team);
+                    updateTeamFilterCount();
+                    renderPlayers();
+                });
+            });
+        }
+
+        function updateTeamFilterCount() {
+            const total = NFL_TEAMS.length + 1; // +FA
+            const count = selectedTeams.size;
+            document.getElementById('teamFilterCount').textContent = count === total ? 'ALL 33' : `${count} / ${total}`;
+        }
+
+        function setAllTeams(checked) {
+            selectedTeams = checked ? new Set([...NFL_TEAMS, 'FA']) : new Set();
+            document.querySelectorAll('.team-cb').forEach(cb => {
+                cb.checked = checked;
+                if (checked) selectedTeams.add(cb.dataset.team);
+            });
+            updateTeamFilterCount();
+            renderPlayers();
+        }
+
+        // Team search filter
+        document.getElementById('teamSearch').addEventListener('input', e => {
+            const q = e.target.value.toLowerCase();
+            document.querySelectorAll('.team-cb, .team-cb-label').forEach(el => {
+                const team = el.dataset?.team || el.getAttribute('for')?.replace('tcb-', '');
+                if (!team) return;
+                const show = !q || team.toLowerCase().includes(q);
+                el.style.display = show ? '' : 'none';
+            });
+        });
+
+        // Toggle panel
+        document.getElementById('teamFilterToggle').addEventListener('click', () => {
+            teamFilterOpen = !teamFilterOpen;
+            document.getElementById('teamFilterPanel').classList.toggle('open', teamFilterOpen);
+            document.getElementById('teamFilterToggle').classList.toggle('border-skyTechnical', teamFilterOpen);
+        });
+
+        // ─── Sort buttons ─────────────────────────────────────────────────────────────
+        document.getElementById('sortPts').addEventListener('click', () => {
+            sortMode = 'pts';
+            document.getElementById('sortPts').classList.add('active');
+            document.getElementById('sortAZ').classList.remove('active');
+            renderPlayers();
+        });
+        document.getElementById('sortAZ').addEventListener('click', () => {
+            sortMode = 'az';
+            document.getElementById('sortAZ').classList.add('active');
+            document.getElementById('sortPts').classList.remove('active');
+            renderPlayers();
+        });
+
         // ─── Data load ────────────────────────────────────────────────────────────────
         async function load2026Data() {
-            try {
-                const response = await fetch('https://api.sleeper.app/v1/players/nfl');
-                const data = await response.json();
+            // Load players + stats in parallel
+            const [playersRes, statsRes] = await Promise.allSettled([
+                fetch('https://api.sleeper.app/v1/players/nfl'),
+                fetch('https://api.sleeper.app/v1/stats/nfl/regular/2025/0') // season totals
+            ]);
+
+            // Process players
+            if (playersRes.status === 'fulfilled') {
+                const data = await playersRes.value.json();
                 const corePositions = ["QB", "RB", "WR", "TE", "K", "DEF"];
                 const idpPositions = ["DL", "LB", "DB", "CB", "S", "ILB", "OLB", "DE", "DT"];
                 players = Object.values(data)
@@ -292,30 +483,70 @@
                         id: p.player_id,
                         name: p.full_name || `${p.first_name} ${p.last_name}`,
                         pos: idpPositions.includes(p.position) ? "D" : p.position,
-                        team: p.team || "FA"
-                    }))
-                    .sort((a, b) => a.name.localeCompare(b.name));
+                        team: p.team || "FA",
+                        search_rank: p.search_rank || 9999
+                    }));
                 statusText.innerText = "2026-2027 SYSTEM READY // LIVE DATA SYNCED";
                 statusText.classList.replace('text-skyTechnical', 'text-emerald-400');
-                renderAll();
-            } catch (err) {
+            } else {
                 statusText.innerText = "CONNECTION ERROR // USING OFFLINE CACHE";
                 statusText.classList.replace('text-skyTechnical', 'text-rose-500');
-                console.error(err);
             }
+
+            // Process season stats
+            if (statsRes.status === 'fulfilled') {
+                try {
+                    const statsData = await statsRes.value.json();
+                    // statsData: { player_id: { pts_ppr, pts_std, pts_half_ppr, ... } }
+                    Object.entries(statsData).forEach(([pid, s]) => {
+                        if (s && (s.pts_ppr || s.pts_half_ppr || s.pts_std)) {
+                            seasonStats[pid] = s.pts_ppr || s.pts_half_ppr || s.pts_std || 0;
+                        }
+                    });
+                    statsLoaded = true;
+                    document.getElementById('statsLoadingBadge').textContent = '2025 season pts';
+                    document.getElementById('statsLoadingBadge').style.color = '#34d399';
+                } catch (e) {
+                    document.getElementById('statsLoadingBadge').textContent = 'stats unavailable';
+                }
+            } else {
+                document.getElementById('statsLoadingBadge').textContent = 'using rank order';
+            }
+
+            buildTeamCheckboxes();
+            renderAll();
         }
 
-        // ─── Render ───────────────────────────────────────────────────────────────────
+        function getPlayerScore(p) {
+            if (statsLoaded && seasonStats[p.id] !== undefined) return seasonStats[p.id];
+            // Fallback: invert search_rank so higher = better
+            return p.search_rank ? (10000 - p.search_rank) : 0;
+        }
+
         function renderAll() { renderPlayers(); renderRosters(); }
 
         function renderPlayers() {
             poolList.innerHTML = '';
-            const filtered = players.filter(p =>
-                (p.name.toLowerCase().includes(currentSearch) || p.team.toLowerCase().includes(currentSearch)) &&
-                (currentFilter === "ALL" || p.pos === currentFilter)
-            ).slice(0, 100);
-            document.getElementById('playerCount').textContent = `(${players.length})`;
-            filtered.forEach(p => {
+            let filtered = players.filter(p => {
+                const nameMatch = p.name.toLowerCase().includes(currentSearch);
+                const posMatch = currentFilter === "ALL" || p.pos === currentFilter;
+                const teamKey = p.team === 'FA' || !p.team ? 'FA' : p.team;
+                const teamMatch = selectedTeams.has(teamKey);
+                return nameMatch && posMatch && teamMatch;
+            });
+
+            // Sort
+            if (sortMode === 'pts') {
+                filtered.sort((a, b) => getPlayerScore(b) - getPlayerScore(a));
+            } else {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            document.getElementById('playerCount').textContent = `(${filtered.length}/${players.length})`;
+
+            filtered.slice(0, 120).forEach(p => {
+                const pts = seasonStats[p.id];
+                const ptsLabel = pts ? `<span class="pts-badge">${pts.toFixed(0)} pts</span>` : '';
                 const card = document.createElement('div');
                 card.className = "bg-surface p-2.5 rounded border border-surfaceHigh/60 flex items-center gap-3 group transition active:bg-surfaceHigh";
                 if (!isMobile) {
@@ -327,7 +558,10 @@
             ${thumbHTML(p, 40)}
             <div class="flex-1 min-w-0">
                 <span class="font-semibold block text-crispWhite text-sm truncate">${p.name}</span>
-                <span class="text-[10px] text-slate-400 stats-font uppercase tracking-widest">${p.team}</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-400 stats-font uppercase tracking-widest">${p.team}</span>
+                    ${ptsLabel}
+                </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
                 <span class="text-[10px] font-extrabold px-2 py-1 bg-skyTechnical text-stadium stats-font">${p.pos}</span>
@@ -336,6 +570,13 @@
         `;
                 poolList.appendChild(card);
             });
+
+            if (filtered.length > 120) {
+                const more = document.createElement('div');
+                more.className = "text-center text-[10px] text-slate-600 py-2 stats-font";
+                more.textContent = `+ ${filtered.length - 120} more — use filters to narrow`;
+                poolList.appendChild(more);
+            }
         }
 
         function showMobilePicker(playerId) {
@@ -354,11 +595,10 @@
             </div>
             <p class="text-xs text-slate-400 uppercase tracking-widest mb-4">Select Destination Manager</p>
             <div class="space-y-3 max-h-[60vh] overflow-y-auto">
-                ${users.map(u => `<button onclick="mobileDraft('${player.id}', ${u.id})" class="w-full p-4 bg-surfaceHigh text-crispWhite font-bold rounded-lg text-left hover:bg-actionOrange hover:text-stadium transition">${u.name}</button>`).join('')}
+                ${users.map(u => `<button onclick="mobileDraft('${player.id}',${u.id})" class="w-full p-4 bg-surfaceHigh text-crispWhite font-bold rounded-lg text-left hover:bg-actionOrange hover:text-stadium transition">${u.name}</button>`).join('')}
             </div>
             <button onclick="document.getElementById('mobilePicker').remove()" class="w-full mt-6 py-3 text-rose-500 font-bold uppercase tracking-widest">Cancel</button>
-        </div>
-    `;
+        </div>`;
             document.body.appendChild(overlay);
         }
 
@@ -393,6 +633,7 @@
                         ${thumbHTML(p, 30, true)}
                         <span class="text-crispWhite font-semibold flex-1 truncate">${p.name}</span>
                         <div class="flex items-center gap-1.5 flex-shrink-0">
+                            ${seasonStats[p.id] ? `<span class="pts-badge">${seasonStats[p.id].toFixed(0)}</span>` : ''}
                             <span class="stats-font text-skyTechnical font-bold text-[10px]">${p.pos}</span>
                             <button onclick="releasePlayer(${user.id},'${p.id}')" class="opacity-0 group-hover:opacity-100 text-rose-500 font-bold transition">✕</button>
                         </div>
@@ -401,13 +642,11 @@
             </div>
             <div class="mt-3 pt-2 border-t border-surfaceHigh/40 flex-none">
                 <span class="text-[10px] font-bold text-actionOrange stats-font uppercase">${user.roster.length} Assets Drafted</span>
-            </div>
-        `;
+            </div>`;
                 rosterGrid.appendChild(zone);
             });
         }
 
-        // ─── Actions ──────────────────────────────────────────────────────────────────
         function handleDrop(e, userId) {
             e.preventDefault();
             const pid = e.dataTransfer.getData('text/plain');
@@ -426,7 +665,6 @@
             const idx = user.roster.findIndex(p => p.id === playerId);
             const [player] = user.roster.splice(idx, 1);
             players.push(player);
-            players.sort((a, b) => a.name.localeCompare(b.name));
             renderAll();
         }
 
@@ -437,20 +675,16 @@
 
         function editUser(id) {
             const user = users.find(u => u.id === id);
-            const newName = prompt("Enter new name for " + user.name + ":", user.name);
-            if (newName && newName.trim()) {
-                saveHistory();
-                user.name = newName.trim().toUpperCase();
-                renderAll();
-            }
+            const n = prompt("Enter new name:", user.name);
+            if (n && n.trim()) { saveHistory(); user.name = n.trim().toUpperCase(); renderAll(); }
         }
 
         function removeUser(id) {
             if (users.length <= 1) return;
-            if (confirm("Are you sure? Drafted players will return to the pool.")) {
+            if (confirm("Remove manager? Their players return to pool.")) {
                 saveHistory();
-                const [removedUser] = users.splice(users.findIndex(u => u.id === id), 1);
-                players = [...players, ...removedUser.roster].sort((a, b) => a.name.localeCompare(b.name));
+                const [rem] = users.splice(users.findIndex(u => u.id === id), 1);
+                players = [...players, ...rem.roster];
                 renderAll();
             }
         }
@@ -475,6 +709,7 @@
             if (e.target.dataset.pos) {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.replace('bg-actionOrange', 'bg-surfaceHigh'));
                 e.target.classList.replace('bg-surfaceHigh', 'bg-actionOrange');
+                e.target.classList.add('text-stadium');
                 currentFilter = e.target.dataset.pos;
                 renderPlayers();
             }
