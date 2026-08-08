@@ -236,30 +236,21 @@
 
                 <!-- Position filter -->
                 <div class="flex flex-wrap gap-1 flex-none" id="filterContainer">
-                    <button data-pos="ALL"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-actionOrange text-stadium">ALL</button>
-                    <button data-pos="QB"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">QB</button>
-                    <button data-pos="RB"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">RB</button>
-                    <button data-pos="WR"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">WR</button>
-                    <button data-pos="TE"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">TE</button>
-                    <button data-pos="K"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">K</button>
-                    <button data-pos="D"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">D</button>
-                    <button data-pos="DEF"
-                        class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh">DEF</button>
+                    <button data-pos="ALL" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-actionOrange text-stadium">ALL</button>
+                    <button data-pos="QB" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-crispWhite">QB</button>
+                    <button data-pos="RB" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-crispWhite">RB</button>
+                    <button data-pos="WR" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-crispWhite">WR</button>
+                    <button data-pos="TE" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-crispWhite">TE</button>
+                    <button data-pos="K" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-crispWhite">K</button>
+                    <button data-pos="D" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-crispWhite">D</button>
+                    <button data-pos="DEF" class="filter-btn px-2 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-crispWhite">DEF</button>
                 </div>
 
                 <!-- Sort toggle -->
                 <div class="flex items-center gap-2 flex-none">
                     <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Sort:</span>
                     <button id="sortPts"
-                        class="sort-btn active px-3 py-1 rounded text-[10px] font-extrabold bg-actionOrange text-stadium uppercase tracking-wider">⭐
-                        Points</button>
+                        class="sort-btn active px-3 py-1 rounded text-[10px] font-extrabold bg-actionOrange text-stadium uppercase tracking-wider">Points</button>
                     <button id="sortAZ"
                         class="sort-btn px-3 py-1 rounded text-[10px] font-extrabold bg-surfaceHigh text-slate-300 uppercase tracking-wider">A–Z</button>
                     <span id="statsLoadingBadge" class="text-[9px] text-slate-500 stats-font">loading stats…</span>
@@ -453,14 +444,29 @@
         // ─── Sort buttons ─────────────────────────────────────────────────────────────
         document.getElementById('sortPts').addEventListener('click', () => {
             sortMode = 'pts';
-            document.getElementById('sortPts').classList.add('active');
-            document.getElementById('sortAZ').classList.remove('active');
+
+            const ptsBtn = document.getElementById('sortPts');
+            ptsBtn.classList.add('active', 'bg-actionOrange', 'text-stadium');
+            ptsBtn.classList.remove('bg-surfaceHigh', 'text-slate-300');
+
+            const azBtn = document.getElementById('sortAZ');
+            azBtn.classList.remove('active', 'bg-actionOrange', 'text-stadium');
+            azBtn.classList.add('bg-surfaceHigh', 'text-slate-300');
+
             renderPlayers();
         });
+
         document.getElementById('sortAZ').addEventListener('click', () => {
             sortMode = 'az';
-            document.getElementById('sortAZ').classList.add('active');
-            document.getElementById('sortPts').classList.remove('active');
+
+            const azBtn = document.getElementById('sortAZ');
+            azBtn.classList.add('active', 'bg-actionOrange', 'text-stadium');
+            azBtn.classList.remove('bg-surfaceHigh', 'text-slate-300');
+
+            const ptsBtn = document.getElementById('sortPts');
+            ptsBtn.classList.remove('active', 'bg-actionOrange', 'text-stadium');
+            ptsBtn.classList.add('bg-surfaceHigh', 'text-slate-300');
+
             renderPlayers();
         });
 
@@ -629,13 +635,13 @@
             <div class="space-y-1.5 overflow-y-auto pr-1 flex-1 max-h-[300px]"
                 ondragover="event.preventDefault()" ondrop="handleDrop(event,${user.id})">
                 ${user.roster.map(p => `
-                    <div class="bg-surface px-2.5 py-1.5 rounded border border-surfaceHigh/50 flex items-center gap-2 text-xs group">
+                    <div class="bg-surface hover:bg-actionOrange px-2.5 py-1.5 rounded border border-surfaceHigh/50 flex items-center gap-2 text-xs group">
                         ${thumbHTML(p, 30, true)}
                         <span class="text-crispWhite font-semibold flex-1 truncate">${p.name}</span>
                         <div class="flex items-center gap-1.5 flex-shrink-0">
                             ${seasonStats[p.id] ? `<span class="pts-badge">${seasonStats[p.id].toFixed(0)}</span>` : ''}
                             <span class="stats-font text-skyTechnical font-bold text-[10px]">${p.pos}</span>
-                            <button onclick="releasePlayer(${user.id},'${p.id}')" class="opacity-0 group-hover:opacity-100 text-rose-500 font-bold transition">✕</button>
+                            <button onclick="releasePlayer(${user.id},'${p.id}')" style="padding:0 5px; border-radius: 5px;"class="bg-rose-500 opacity-0 group-hover:opacity-100 text-black font-bold transition">✕</button>
                         </div>
                     </div>
                 `).join('') || '<div class="h-32 flex items-center justify-center text-slate-700 text-[10px] uppercase font-bold text-center">Drag Player to Field</div>'}
@@ -707,9 +713,12 @@
 
         document.getElementById('filterContainer').addEventListener('click', e => {
             if (e.target.dataset.pos) {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.replace('bg-actionOrange', 'bg-surfaceHigh'));
-                e.target.classList.replace('bg-surfaceHigh', 'bg-actionOrange');
-                e.target.classList.add('text-stadium');
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('bg-actionOrange', 'text-stadium');
+                    b.classList.add('bg-surfaceHigh', 'text-crispWhite');
+                });
+                e.target.classList.remove('bg-surfaceHigh', 'text-crispWhite');
+                e.target.classList.add('bg-actionOrange', 'text-stadium');
                 currentFilter = e.target.dataset.pos;
                 renderPlayers();
             }
