@@ -194,6 +194,141 @@
             color: #FB923C;
             letter-spacing: -0.02em;
         }
+
+        /* Projected points badge */
+        .proj-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            color: #38BDF8;
+            letter-spacing: -0.02em;
+        }
+
+        /* Status dot — little circle showing injury/roster status */
+        .status-dot {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1.5px solid #0F172A;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            line-height: 1;
+            color: #0F172A;
+            z-index: 2;
+        }
+
+        .status-dot.sz40 {
+            width: 16px;
+            height: 16px;
+            font-size: 7px;
+            top: -3px;
+            right: -3px;
+        }
+
+        .status-dot.sz30 {
+            width: 13px;
+            height: 13px;
+            font-size: 6px;
+            top: -2px;
+            right: -2px;
+        }
+
+        .status-dot.st-out {
+            background: #f43f5e;
+        }
+
+        .status-dot.st-doubtful {
+            background: #fb923c;
+        }
+
+        .status-dot.st-questionable {
+            background: #facc15;
+        }
+
+        .status-dot.st-ir,
+        .status-dot.st-pup,
+        .status-dot.st-nfi {
+            background: #94a3b8;
+        }
+
+        .status-dot.st-sus,
+        .status-dot.st-cov {
+            background: #a855f7;
+            color: #F8FAFC;
+        }
+
+        .status-dot.st-other {
+            background: #64748b;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 2px 6px 2px 5px;
+            border-radius: 999px;
+        }
+
+        .status-pill .dot-core {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Player detail modal */
+        #playerDetailOverlay {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .stat-season-card {
+            background: #101415;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-btn {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #334155;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            transition: all 0.12s;
+        }
+
+        .info-btn:hover,
+        .info-btn:active {
+            background: #38BDF8;
+            color: #0F172A;
+        }
     </style>
 </head>
 
@@ -319,6 +454,52 @@
         }
         function playerThumbUrl(id) { return `https://sleepercdn.com/content/nfl/players/thumb/${id}.jpg`; }
 
+        // ─── Player status (injury / roster) metadata ──────────────────────────────────
+        // Maps a raw Sleeper injury_status string to a short code, CSS class, and full label.
+        function statusMeta(status) {
+            if (!status) return null;
+            const s = status.toLowerCase();
+            const map = {
+                'out': { code: 'O', cls: 'st-out', label: 'Out' },
+                'doubtful': { code: 'D', cls: 'st-doubtful', label: 'Doubtful' },
+                'questionable': { code: 'Q', cls: 'st-questionable', label: 'Questionable' },
+                'ir': { code: 'IR', cls: 'st-ir', label: 'Injured Reserve' },
+                'injured reserve': { code: 'IR', cls: 'st-ir', label: 'Injured Reserve' },
+                'pup': { code: 'P', cls: 'st-pup', label: 'Physically Unable to Perform' },
+                'nfi': { code: 'NF', cls: 'st-nfi', label: 'Non-Football Injury' },
+                'sus': { code: 'S', cls: 'st-sus', label: 'Suspended' },
+                'suspended': { code: 'S', cls: 'st-sus', label: 'Suspended' },
+                'cov': { code: 'C', cls: 'st-cov', label: 'COVID-19' },
+            };
+            if (map[s]) return map[s];
+            // Fallback: unrecognized non-empty status still gets shown
+            const shortCode = status.length <= 2 ? status.toUpperCase() : status.slice(0, 1).toUpperCase();
+            return { code: shortCode, cls: 'st-other', label: status };
+        }
+
+        // Little circle overlay shown on a player's thumbnail when they have a non-standard status
+        function statusDotHTML(player, size = 40) {
+            const meta = statusMeta(player.injuryStatus);
+            if (!meta) return '';
+            const szClass = size === 40 ? 'sz40' : 'sz30';
+            return `<span class="status-dot ${szClass} ${meta.cls}" title="${meta.label}">${meta.code}</span>`;
+        }
+
+        // Small inline pill (dot + text) used inside the player detail modal
+        function statusPillHTML(player) {
+            const meta = statusMeta(player.injuryStatus);
+            if (!meta) return '<span class="status-pill" style="background:#1E293B;color:#64748b;">ACTIVE</span>';
+            const bg = {
+                'st-out': 'rgba(244,63,94,0.15)', 'st-doubtful': 'rgba(251,146,60,0.15)',
+                'st-questionable': 'rgba(250,204,21,0.15)', 'st-ir': 'rgba(148,163,184,0.15)',
+                'st-pup': 'rgba(148,163,184,0.15)', 'st-nfi': 'rgba(148,163,184,0.15)',
+                'st-sus': 'rgba(168,85,247,0.15)', 'st-cov': 'rgba(168,85,247,0.15)', 'st-other': 'rgba(100,116,139,0.15)'
+            }[meta.cls] || 'rgba(100,116,139,0.15)';
+            const dotColor = { 'st-out': '#f43f5e', 'st-doubtful': '#fb923c', 'st-questionable': '#facc15', 'st-ir': '#94a3b8', 'st-pup': '#94a3b8', 'st-nfi': '#94a3b8', 'st-sus': '#a855f7', 'st-cov': '#a855f7', 'st-other': '#64748b' }[meta.cls] || '#64748b';
+            const textColor = { 'st-out': '#f43f5e', 'st-doubtful': '#fb923c', 'st-questionable': '#facc15', 'st-ir': '#cbd5e1', 'st-pup': '#cbd5e1', 'st-nfi': '#cbd5e1', 'st-sus': '#c084fc', 'st-cov': '#c084fc', 'st-other': '#94a3b8' }[meta.cls] || '#94a3b8';
+            return `<span class="status-pill" style="background:${bg};color:${textColor};"><span class="dot-core" style="background:${dotColor};"></span>${meta.label}</span>`;
+        }
+
         function thumbHTML(player, size = 40, forRoster = false) {
             const isDef = player.pos === 'DEF';
             const szClass = size === 40 ? 'sz40' : 'sz30';
@@ -326,9 +507,12 @@
             const borderR = isDef ? (size === 40 ? '6px' : '4px') : '50%';
             const border = forRoster ? '1.5px solid #334155' : '2px solid #334155';
             const url = isDef ? teamLogoUrl(player.team) : playerThumbUrl(player.id);
-            return `<span class="thumb-placeholder ${szClass}${defClass}" style="border-radius:${borderR};border:${border};">
-        <img src="${url}" style="width:100%;height:100%;object-fit:cover;object-position:${isDef ? 'center' : 'top center'};border-radius:inherit;display:block;"
-             alt="${player.name}" onerror="swapToSilhouette(this,${isDef})" loading="lazy"/>
+            return `<span style="position:relative;display:inline-flex;flex-shrink:0;">
+        <span class="thumb-placeholder ${szClass}${defClass}" style="border-radius:${borderR};border:${border};">
+            <img src="${url}" style="width:100%;height:100%;object-fit:cover;object-position:${isDef ? 'center' : 'top center'};border-radius:inherit;display:block;"
+                 alt="${player.name}" onerror="swapToSilhouette(this,${isDef})" loading="lazy"/>
+        </span>
+        ${statusDotHTML(player, size)}
     </span>`;
         }
 
@@ -352,8 +536,10 @@
         window.addEventListener('resize', () => { isMobile = window.innerWidth < 1024; renderAll(); });
 
         let players = [];
-        let seasonStats = {};      // playerId -> pts_ppr (2025 season totals)
+        let seasonStats = {};      // playerId -> pts_ppr (2025 season totals, used for sorting)
         let statsLoaded = false;
+        let statsBySeason = { 2024: {}, 2025: {} }; // playerId -> full stat object, per season
+        let projections2026 = {};  // playerId -> full projection object for the upcoming season
         let users = [{ id: Date.now(), name: "INITIAL MANAGER", roster: [] }];
         let history = [];
         let currentFilter = "ALL";
@@ -444,38 +630,23 @@
         // ─── Sort buttons ─────────────────────────────────────────────────────────────
         document.getElementById('sortPts').addEventListener('click', () => {
             sortMode = 'pts';
-
-            const ptsBtn = document.getElementById('sortPts');
-            ptsBtn.classList.add('active', 'bg-actionOrange', 'text-stadium');
-            ptsBtn.classList.remove('bg-surfaceHigh', 'text-slate-300');
-
-            const azBtn = document.getElementById('sortAZ');
-            azBtn.classList.remove('active', 'bg-actionOrange', 'text-stadium');
-            azBtn.classList.add('bg-surfaceHigh', 'text-slate-300');
-
+            document.getElementById('sortPts').classList.add('active');
+            document.getElementById('sortAZ').classList.remove('active');
             renderPlayers();
         });
-
         document.getElementById('sortAZ').addEventListener('click', () => {
             sortMode = 'az';
-
-            const azBtn = document.getElementById('sortAZ');
-            azBtn.classList.add('active', 'bg-actionOrange', 'text-stadium');
-            azBtn.classList.remove('bg-surfaceHigh', 'text-slate-300');
-
-            const ptsBtn = document.getElementById('sortPts');
-            ptsBtn.classList.remove('active', 'bg-actionOrange', 'text-stadium');
-            ptsBtn.classList.add('bg-surfaceHigh', 'text-slate-300');
-
+            document.getElementById('sortAZ').classList.add('active');
+            document.getElementById('sortPts').classList.remove('active');
             renderPlayers();
         });
 
         // ─── Data load ────────────────────────────────────────────────────────────────
         async function load2026Data() {
-            // Load players + stats in parallel
+            // Load players + last completed season's stats (used for the pool sort/badge)
             const [playersRes, statsRes] = await Promise.allSettled([
                 fetch('https://api.sleeper.app/v1/players/nfl'),
-                fetch('https://api.sleeper.app/v1/stats/nfl/regular/2025/0') // season totals
+                fetch('https://api.sleeper.app/v1/stats/nfl/regular/2025/0') // 2025 season totals
             ]);
 
             // Process players
@@ -490,7 +661,8 @@
                         name: p.full_name || `${p.first_name} ${p.last_name}`,
                         pos: idpPositions.includes(p.position) ? "D" : p.position,
                         team: p.team || "FA",
-                        search_rank: p.search_rank || 9999
+                        search_rank: p.search_rank || 9999,
+                        injuryStatus: (p.injury_status && p.injury_status.trim()) || null
                     }));
                 statusText.innerText = "2026-2027 SYSTEM READY // LIVE DATA SYNCED";
                 statusText.classList.replace('text-skyTechnical', 'text-emerald-400');
@@ -499,7 +671,7 @@
                 statusText.classList.replace('text-skyTechnical', 'text-rose-500');
             }
 
-            // Process season stats
+            // Process 2025 season stats (also used for default sort order + pool badge)
             if (statsRes.status === 'fulfilled') {
                 try {
                     const statsData = await statsRes.value.json();
@@ -508,6 +680,7 @@
                         if (s && (s.pts_ppr || s.pts_half_ppr || s.pts_std)) {
                             seasonStats[pid] = s.pts_ppr || s.pts_half_ppr || s.pts_std || 0;
                         }
+                        if (s) statsBySeason[2025][pid] = s;
                     });
                     statsLoaded = true;
                     document.getElementById('statsLoadingBadge').textContent = '2025 season pts';
@@ -521,6 +694,258 @@
 
             buildTeamCheckboxes();
             renderAll();
+            loadBulkProjections(); // best-effort, runs in background, refreshes badges when done
+        }
+
+        // Best-effort bulk fetch to populate "proj" badges across the whole pool at once.
+        // Never blocks initial render; if both hosts fail, per-player fetches in the
+        // detail modal still work individually.
+        async function loadBulkProjections() {
+            const season = 2026;
+            let filled = false;
+            try {
+                const res = await fetch(`https://api.sleeper.com/projections/nfl/${season}?season_type=regular`);
+                if (!res.ok) throw new Error('bad status ' + res.status);
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    data.forEach(entry => {
+                        const pid = entry.player_id || (entry.player && entry.player.player_id);
+                        const statsObj = (entry.stats && typeof entry.stats === 'object') ? entry.stats : entry;
+                        if (pid && !hasFetched(projections2026, pid)) { projections2026[pid] = statsObj; filled = true; }
+                    });
+                } else if (data && typeof data === 'object') {
+                    Object.entries(data).forEach(([pid, s]) => {
+                        if (!hasFetched(projections2026, pid)) { projections2026[pid] = s; filled = true; }
+                    });
+                }
+            } catch (e) {
+                try {
+                    const res2 = await fetch(`https://api.sleeper.app/v1/projections/nfl/regular/${season}/0`);
+                    if (res2.ok) {
+                        const data2 = await res2.json();
+                        Object.entries(data2 || {}).forEach(([pid, s]) => {
+                            if (!hasFetched(projections2026, pid)) { projections2026[pid] = s; filled = true; }
+                        });
+                    }
+                } catch (e2) { /* both hosts failed — badges just won't show in the pool list */ }
+            }
+            if (filled) renderPlayers();
+        }
+
+        // Pull a single fantasy-points figure out of a stat/projection object, preferring PPR
+        function getPtsFromStatObj(s) {
+            if (!s) return null;
+            const v = s.pts_ppr ?? s.pts_half_ppr ?? s.pts_std;
+            return (v === undefined || v === null) ? null : v;
+        }
+
+        // Position-specific "key stats" to show for a season/projection stat object
+        function keyStatRows(pos, s) {
+            if (!s) return [];
+            const row = (label, val, suffix = '') => (val === undefined || val === null) ? null : { label, value: `${Math.round(val * 10) / 10}${suffix}` };
+            let rows = [];
+            if (pos === 'QB') {
+                rows = [row('Pass Yds', s.pass_yd), row('Pass TD', s.pass_td), row('INT', s.pass_int), row('Rush Yds', s.rush_yd), row('Rush TD', s.rush_td)];
+            } else if (pos === 'RB') {
+                rows = [row('Rush Yds', s.rush_yd), row('Rush TD', s.rush_td), row('Rec', s.rec), row('Rec Yds', s.rec_yd)];
+            } else if (pos === 'WR' || pos === 'TE') {
+                rows = [row('Targets', s.rec_tgt), row('Rec', s.rec), row('Rec Yds', s.rec_yd), row('Rec TD', s.rec_td)];
+            } else if (pos === 'K') {
+                rows = [row('FG Made', s.fgm), row('FG Att', s.fga), row('XP Made', s.xpm)];
+            } else if (pos === 'DEF' || pos === 'D') {
+                rows = [row('Sacks', s.sack), row('INT', s.int), row('Fum Rec', s.fum_rec), row('Def TD', s.def_td)];
+            }
+            return rows.filter(Boolean);
+        }
+
+        // ─── Lazy per-player stats/projections ──────────────────────────────────────
+        // Sleeper's bulk season endpoints are unreliable for arbitrary seasons/projections,
+        // so player detail data is fetched on demand, per player, from the per-player endpoint,
+        // and cached so re-opening a player's card doesn't refetch.
+        function hasFetched(cache, id) {
+            return Object.prototype.hasOwnProperty.call(cache, id);
+        }
+
+        // Tries the per-player endpoint (api.sleeper.com), then falls back to pulling the
+        // player's row out of the bulk season endpoint (api.sleeper.app) if that fails.
+        async function fetchPlayerStatObj(kind, playerId, season) {
+            // kind: 'stats' | 'projections'
+            try {
+                const url = `https://api.sleeper.com/${kind}/nfl/player/${playerId}?season=${season}&season_type=regular&grouping=season`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`${kind} ${season} request failed: ${res.status}`);
+                const data = await res.json();
+                if (data) {
+                    // Response sometimes nests the actual stat fields under a "stats" key
+                    const obj = (data.stats && typeof data.stats === 'object') ? data.stats : data;
+                    if (obj && Object.keys(obj).length) return obj;
+                    return null; // fetch succeeded, player genuinely has no stats this season
+                }
+                return null;
+            } catch (primaryErr) {
+                // Fallback: bulk season endpoint, pick this player's entry out of it
+                try {
+                    const bulkUrl = `https://api.sleeper.app/v1/${kind}/nfl/regular/${season}/0`;
+                    const res2 = await fetch(bulkUrl);
+                    if (!res2.ok) throw new Error(`bulk ${kind} ${season} request failed: ${res2.status}`);
+                    const bulkData = await res2.json();
+                    if (bulkData && bulkData[playerId]) return bulkData[playerId];
+                    if (bulkData) return null; // fetch succeeded, player just isn't in it
+                    throw new Error('empty bulk response');
+                } catch (fallbackErr) {
+                    throw fallbackErr; // both sources failed — genuine load error
+                }
+            }
+        }
+
+        // Renders the inner content (no outer card wrapper) of one season/projection block
+        function statBlockInnerHTML(label, s, pos, isProjection = false) {
+            const pts = getPtsFromStatObj(s);
+            const gp = s && s.gp;
+            if (pts === null && !gp) {
+                return `<div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">${label}</span>
+            </div>
+            <p class="text-[11px] text-slate-600 stats-font">No data available</p>`;
+            }
+            const ppg = (pts !== null && gp) ? (pts / gp) : null;
+            const rows = keyStatRows(pos, s);
+            return `<div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">${label}</span>
+                <span class="${isProjection ? 'proj-badge' : 'pts-badge'} text-sm">${pts !== null ? pts.toFixed(1) : '—'} ${isProjection ? 'PROJ' : 'PTS'}</span>
+            </div>
+            <div class="stat-row"><span class="text-slate-500">Games Played</span><span class="text-crispWhite">${gp ?? '—'}</span></div>
+            ${ppg !== null ? `<div class="stat-row"><span class="text-slate-500">Pts / Game</span><span class="text-crispWhite">${ppg.toFixed(1)}</span></div>` : ''}
+            ${rows.map(r => `<div class="stat-row"><span class="text-slate-500">${r.label}</span><span class="text-crispWhite">${r.value}</span></div>`).join('')}`;
+        }
+
+        function statBlockLoadingInnerHTML(label) {
+            return `<div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">${label}</span>
+            </div>
+            <div class="loading-shimmer h-2.5 rounded mb-1.5"></div>
+            <div class="loading-shimmer h-2.5 rounded mb-1.5"></div>
+            <div class="loading-shimmer h-2.5 rounded w-2/3"></div>`;
+        }
+
+        // Distinct from "no data" — the fetch itself failed (network/CORS), not that the player lacks stats
+        function statBlockErrorInnerHTML(label, kind, season, playerId, pos, isProjection) {
+            return `<div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">${label}</span>
+            </div>
+            <p class="text-[11px] text-rose-500 stats-font mb-1.5">Couldn't load stats</p>
+            <button onclick="retryStatBlock('${kind}','${season}','${playerId}','${pos}',${isProjection})" class="text-[10px] font-extrabold uppercase tracking-widest text-skyTechnical hover:text-crispWhite transition">↻ Retry</button>`;
+        }
+
+        async function retryStatBlock(kind, season, playerId, pos, isProjection) {
+            const elId = kind === 'projections' ? 'pd-proj' : (season === '2025' ? 'pd-2025' : 'pd-2024');
+            const label = kind === 'projections' ? '2026 Projected' : `${season} Season`;
+            const el = document.getElementById(elId);
+            if (el) el.innerHTML = statBlockLoadingInnerHTML(label);
+            try {
+                const s = await fetchPlayerStatObj(kind, playerId, season);
+                const cache = kind === 'projections' ? projections2026 : statsBySeason[season];
+                cache[playerId] = s;
+                const el2 = document.getElementById(elId);
+                if (el2) el2.innerHTML = statBlockInnerHTML(label, s, pos, isProjection);
+            } catch (e) {
+                const el2 = document.getElementById(elId);
+                if (el2) el2.innerHTML = statBlockErrorInnerHTML(label, kind, season, playerId, pos, isProjection);
+            }
+        }
+
+        // ─── Player detail modal ─────────────────────────────────────────────────────
+        async function showPlayerDetail(playerId) {
+            const player = players.find(p => p.id === playerId) ||
+                users.flatMap(u => u.roster).find(p => p.id === playerId);
+            if (!player) return;
+
+            const existing = document.getElementById('playerDetailOverlay');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'playerDetailOverlay';
+            overlay.className = "fixed inset-0 bg-stadium/90 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-4";
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+            const cachedProj = projections2026[player.id];
+            const cached2025 = statsBySeason[2025][player.id];
+            const cached2024 = statsBySeason[2024][player.id];
+
+            overlay.innerHTML = `
+        <div class="w-full max-w-md bg-surface rounded-xl border border-surfaceHigh shadow-2xl max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="p-5">
+                <div class="flex items-start justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${thumbHTML(player, 40)}
+                        <div class="min-w-0">
+                            <h3 class="text-xl text-crispWhite truncate leading-tight">${player.name}</h3>
+                            <p class="text-xs text-slate-400 uppercase tracking-widest">${player.pos} · ${player.team}</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('playerDetailOverlay').remove()" class="text-slate-500 hover:text-crispWhite text-2xl leading-none flex-shrink-0">&times;</button>
+                </div>
+
+                <div class="mb-4">${statusPillHTML(player)}</div>
+
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-2">This Season Projection</p>
+                <div class="stat-season-card" id="pd-proj">${hasFetched(projections2026, player.id) ? statBlockInnerHTML('2026 Projected', cachedProj, player.pos, true) : statBlockLoadingInnerHTML('2026 Projected')}</div>
+
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mt-4 mb-2">Last 2 Seasons</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="stat-season-card" id="pd-2025">${hasFetched(statsBySeason[2025], player.id) ? statBlockInnerHTML('2025 Season', cached2025, player.pos) : statBlockLoadingInnerHTML('2025 Season')}</div>
+                    <div class="stat-season-card" id="pd-2024">${hasFetched(statsBySeason[2024], player.id) ? statBlockInnerHTML('2024 Season', cached2024, player.pos) : statBlockLoadingInnerHTML('2024 Season')}</div>
+                </div>
+            </div>
+            <button onclick="document.getElementById('playerDetailOverlay').remove()" class="w-full py-3 border-t border-surfaceHigh/60 text-slate-400 font-bold uppercase tracking-widest text-xs hover:text-crispWhite hover:bg-surfaceHigh/40 transition">Close</button>
+        </div>`;
+            document.body.appendChild(overlay);
+
+            // Fetch anything not already cached, then patch the DOM in place if the modal is still open
+            const jobs = [];
+            if (!hasFetched(projections2026, player.id)) {
+                jobs.push(
+                    fetchPlayerStatObj('projections', player.id, 2026)
+                        .then(s => {
+                            projections2026[player.id] = s;
+                            const el = document.getElementById('pd-proj');
+                            if (el) el.innerHTML = statBlockInnerHTML('2026 Projected', s, player.pos, true);
+                        })
+                        .catch(() => {
+                            const el = document.getElementById('pd-proj');
+                            if (el) el.innerHTML = statBlockErrorInnerHTML('2026 Projected', 'projections', 2026, player.id, player.pos, true);
+                        })
+                );
+            }
+            if (!hasFetched(statsBySeason[2025], player.id)) {
+                jobs.push(
+                    fetchPlayerStatObj('stats', player.id, 2025)
+                        .then(s => {
+                            statsBySeason[2025][player.id] = s;
+                            const el = document.getElementById('pd-2025');
+                            if (el) el.innerHTML = statBlockInnerHTML('2025 Season', s, player.pos);
+                        })
+                        .catch(() => {
+                            const el = document.getElementById('pd-2025');
+                            if (el) el.innerHTML = statBlockErrorInnerHTML('2025 Season', 'stats', 2025, player.id, player.pos, false);
+                        })
+                );
+            }
+            if (!hasFetched(statsBySeason[2024], player.id)) {
+                jobs.push(
+                    fetchPlayerStatObj('stats', player.id, 2024)
+                        .then(s => {
+                            statsBySeason[2024][player.id] = s;
+                            const el = document.getElementById('pd-2024');
+                            if (el) el.innerHTML = statBlockInnerHTML('2024 Season', s, player.pos);
+                        })
+                        .catch(() => {
+                            const el = document.getElementById('pd-2024');
+                            if (el) el.innerHTML = statBlockErrorInnerHTML('2024 Season', 'stats', 2024, player.id, player.pos, false);
+                        })
+                );
+            }
+            await Promise.allSettled(jobs);
         }
 
         function getPlayerScore(p) {
@@ -553,6 +978,8 @@
             filtered.slice(0, 120).forEach(p => {
                 const pts = seasonStats[p.id];
                 const ptsLabel = pts ? `<span class="pts-badge">${pts.toFixed(0)} pts</span>` : '';
+                const projPts = getPtsFromStatObj(projections2026[p.id]);
+                const projLabel = projPts ? `<span class="proj-badge">${projPts.toFixed(0)} proj</span>` : '';
                 const card = document.createElement('div');
                 card.className = "bg-surface p-2.5 rounded border border-surfaceHigh/60 flex items-center gap-3 group transition active:bg-surfaceHigh";
                 if (!isMobile) {
@@ -567,11 +994,13 @@
                 <div class="flex items-center gap-2">
                     <span class="text-[10px] text-slate-400 stats-font uppercase tracking-widest">${p.team}</span>
                     ${ptsLabel}
+                    ${projLabel}
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
                 <span class="text-[10px] font-extrabold px-2 py-1 bg-skyTechnical text-stadium stats-font">${p.pos}</span>
-                ${isMobile ? `<button onclick="showMobilePicker('${p.id}')" class="w-10 h-10 flex items-center justify-center bg-actionOrange text-stadium rounded-full shadow-lg"><span class="text-xl font-bold">+</span></button>` : ''}
+                <button onclick="event.stopPropagation();showPlayerDetail('${p.id}')" class="info-btn" title="Player stats">i</button>
+                ${isMobile ? `<button onclick="event.stopPropagation();showMobilePicker('${p.id}')" class="w-10 h-10 flex items-center justify-center bg-actionOrange text-stadium rounded-full shadow-lg"><span class="text-xl font-bold">+</span></button>` : ''}
             </div>
         `;
                 poolList.appendChild(card);
@@ -641,6 +1070,7 @@
                         <div class="flex items-center gap-1.5 flex-shrink-0">
                             ${seasonStats[p.id] ? `<span class="pts-badge">${seasonStats[p.id].toFixed(0)}</span>` : ''}
                             <span class="stats-font text-skyTechnical font-bold text-[10px]">${p.pos}</span>
+                            <button onclick="event.stopPropagation();showPlayerDetail('${p.id}')" class="info-btn" style="width:20px;height:20px;font-size:10px;" title="Player stats">i</button>
                             <button onclick="releasePlayer(${user.id},'${p.id}')" style="padding:0 5px; border-radius: 5px;"class="bg-rose-500 opacity-0 group-hover:opacity-100 text-black font-bold transition">✕</button>
                         </div>
                     </div>
